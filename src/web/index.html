@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>某公司-在线数据看板</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--accent:#4f46e5;--accent2:#6366f1;--green:#16a34a;--red:#dc2626;--amber:#f59e0b;--blue:#2563eb;--shadow:0 1px 3px rgba(0,0,0,.08);--radius:10px;--font:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;--kpi0:#4f46e5;--kpi1:#0891b2;--kpi2:#16a34a;--kpi3:#f59e0b;--kpi4:#dc2626;--kpi5:#7c3aed;--kpi6:#db2777;--kpi7:#0d9488}
+.dark{--bg:#0f172a;--card:#1e293b;--text:#e2e8f0;--muted:#94a3b8;--border:#334155;--shadow:0 1px 3px rgba(0,0,0,.3)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
+.container{max-width:1500px;margin:0 auto;padding:12px 20px}
+
+/* header */
+header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:14px}
+header .title{font-size:22px;font-weight:800;display:flex;align-items:center;gap:8px}
+header .title .dot{width:9px;height:9px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+header .meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+header .meta span{white-space:nowrap}
+header .meta b{color:var(--text)}
+.btn{padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);cursor:pointer;font-size:13px;transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.sm{padding:4px 10px;font-size:12px}
+.btn.act{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* refresh bar */
+.refresh-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.refresh-bar select{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px}
+.countdown{font-variant-numeric:tabular-nums;min-width:28px;text-align:center;font-weight:700;color:var(--accent)}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:14px}
+.kpi-card{background:var(--card);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);border-left:4px solid var(--accent);transition:transform .15s}
+.kpi-card:hover{transform:translateY(-2px)}
+.kpi-card .kpi-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+.kpi-card .kpi-val{font-size:26px;font-weight:800;line-height:1.1}
+.kpi-card .kpi-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* filters */
+.filter-bar{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow)}
+.filter-bar label{font-size:13px;color:var(--muted);white-space:nowrap}
+.filter-bar .chip-group{display:flex;flex-wrap:wrap;gap:5px}
+.filter-bar .chip{padding:3px 10px;border-radius:14px;border:1px solid var(--border);font-size:12px;cursor:pointer;transition:all .15s;background:var(--card);color:var(--text);white-space:nowrap}
+.filter-bar .chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.filter-bar input[type=text]{padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--card);color:var(--text);width:160px}
+
+/* grid sections */
+.section{margin-bottom:16px}
+.section h2{font-size:16px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:12px}
+.chart-card{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+.chart-card .ch{width:100%;height:320px}
+.chart-card .ch.wide{height:380px}
+
+/* tables */
+.tbl-wrap{max-height:520px;overflow:auto;border-radius:var(--radius);box-shadow:var(--shadow)}
+/* tabs */
+.tabs{display:flex;gap:6px;margin-bottom:8px}
+.tabs .tab{padding:6px 16px;border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;background:var(--card);cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s}
+.tabs .tab.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.tab-panel{display:none}
+.tab-panel.on{display:block}
+table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card)}
+thead{position:sticky;top:0;z-index:2}
+th{background:var(--accent);color:#fff;padding:8px 10px;cursor:pointer;text-align:left;white-space:nowrap;user-select:none;font-weight:600}
+th:hover{background:var(--accent2)}
+td{padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+tr:hover td{background:rgba(79,70,229,.04)}
+.rate-bar{display:inline-block;height:6px;border-radius:3px;min-width:2px;vertical-align:middle;margin-right:6px}
+.badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge.pass{background:#dcfce7;color:#166534}
+.badge.fail{background:#fee2e2;color:#991b1b}
+.badge.skip{background:#f3f4f6;color:#6b7280}
+.dark .badge.pass{background:#14532d;color:#86efac}
+.dark .badge.fail{background:#7f1d1d;color:#fca5a5}
+.dark .badge.skip{background:#374151;color:#9ca3af}
+
+/* toast */
+.toast{position:fixed;top:20px;right:20px;z-index:9999;background:var(--accent);color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+
+/* print */
+@media print{header .dot{display:none}.refresh-bar{display:none}.filter-bar{display:none}.toast{display:none}body{background:#fff}.container{max-width:100%;padding:0}.chart-card{break-inside:avoid;box-shadow:none;border:1px solid #ddd}}
+
+/* responsive */
+@media(max-width:900px){.charts-grid{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* ---- 实时时钟 / 刷新倒计时（注入） ---- */
+.live-wrap{display:inline-flex;align-items:center;gap:6px;margin-left:8px;font-size:12px;
+  color:var(--muted,#6b7280);font-variant-numeric:tabular-nums;white-space:nowrap;vertical-align:middle}
+.live-wrap b{font-weight:700;color:var(--fg,#1f2937);font-variant-numeric:tabular-nums}
+.live-sep{opacity:.4}
+.live-wrap .dot{width:6px;height:6px;border-radius:50%;background:#5e8a70;
+  display:inline-block;animation:hzpulse 1s infinite}
+@keyframes hzpulse{0%,100%{opacity:1}50%{opacity:.18}}
+
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <div class="title">
+    <span class="dot" id="live-dot"></span>
+    某公司-在线数据看板
+  </div>
+  <div class="meta">
+    <span>数据截至 <b id="meta-dt">--</b></span>
+    <span>文件时间 <b id="meta-mt">--</b></span>
+    <span style="font-size:11px;color:var(--muted)" id="meta-status">加载中...</span>
+  </div>
+</header>
+
+<!-- 刷新控制 -->
+<div class="refresh-bar">
+  <label>自动刷新</label>
+  <select id="sel-interval" onchange="setMyInterval()">
+<option value="10">10 秒</option>
+<option value="20" selected>20 秒</option>
+<option value="30">30 秒</option>
+<option value="60">60 秒</option>
+<option value="0">关闭</option>
+</select><span class="live-wrap"><span class="dot"></span><b id="live-clock">--:--:--</b><span class="live-sep">·</span><span>数据同步 <b id="live-dt">--:--:--</b></span><span class="live-sep">·</span><span id="live-rel">同步中…</span><span class="live-sep">·</span><span><b id="cd-live">--</b> 秒后刷新</span></span>
+  <span class="countdown" id="countdown">5</span>
+  <button class="btn sm" onclick="manualRefresh()" title="立即刷新">&#x21bb; 手动刷新</button>
+  <button class="btn sm" id="btn-theme" onclick="toggleTheme()">🌙 深色</button>
+  <button class="btn sm" onclick="exportCSV()">&#x2913; 导出 CSV</button>
+  <button class="btn sm" id="btn-hist" title="历史天数/月统计查询">&#128197; 历史</button>
+  <button class="btn sm" onclick="window.print()">&#x1f5a8; 打印</button>
+</div>
+
+<!-- KPI 卡片 -->
+<div class="kpi-grid" id="kpi-grid"></div>
+
+<!-- 筛选器 -->
+<div class="filter-bar" id="filter-bar">
+  <label>事业部:</label>
+  <div class="chip-group" id="chip-bu"></div>
+  <span style="color:var(--muted);font-size:12px;margin:0 4px">|</span>
+  <label>部门:</label>
+  <select id="sel-dept" onchange="applyFilter()"><option value="">全部部门</option></select>
+  <span style="color:var(--muted);font-size:12px;margin:0 4px">|</span>
+  <label>搜索:</label>
+  <input type="text" id="search-q" placeholder="搜索姓名 / 工号..." oninput="debounceSearch()">
+  <button class="btn sm" onclick="clearSearch()" style="margin-left:4px">✕ 清除</button>
+</div>
+
+<!-- 历史数据查询（单选/多选天数 + 按月统计） -->
+<div class="filter-bar" id="hist-panel" style="display:none">
+  <label>📅 历史查询:</label>
+  <label style="font-size:12px">月份</label>
+  <select id="sel-month" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);font-size:12px"><option value="">全部月份</option></select>
+  <span style="color:var(--muted);font-size:12px">|</span>
+  <label style="font-size:12px">天数（点击=单选/多选，选1天看当天完整看板）:</label>
+  <div id="hist-days" style="display:flex;flex-wrap:wrap;gap:5px;max-height:88px;overflow:auto;padding:2px"></div>
+  <button class="btn sm" id="hist-all" style="margin-left:6px">全部天</button>
+  <button class="btn sm" id="hist-clear">清除</button>
+  <span id="hist-hint" style="font-size:12px;color:var(--muted)"></span>
+</div>
+<div id="hist-banner" style="display:none;margin-bottom:12px;padding:10px 14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:10px;font-size:13px;font-weight:600"></div>
+<div id="hist-summary" style="display:none"></div>
+
+<!-- 模块1：人员明细（总表 / 法律日达标） -->
+<div class="section">
+  <h2>👥 人员明细<span id="total-count" style="font-size:13px;font-weight:400;color:var(--muted);margin-left:10px"></span></h2>
+  <div class="tabs">
+    <span class="tab on" id="tab-total" onclick="switchTab('total')">📋 全员明细（总表）</span>
+    <span class="tab" id="tab-legal" onclick="switchTab('legal')">⚖️ 法律日达标</span>
+    <span class="tab" id="tab-kj" onclick="switchTab('kj')" style="display:none">🧮 会计达标</span>
+  </div>
+  <div class="tab-panel on" id="panel-total"><div class="tbl-wrap"><table id="tbl-total"></table></div></div>
+  <div class="tab-panel" id="panel-legal"><div class="tbl-wrap"><table id="tbl-legal"></table></div></div>
+  <div class="tab-panel" id="panel-kj">
+    <div id="kj-kpi" class="kpi-grid" style="margin:10px 0"></div>
+    <div class="tbl-wrap"><table id="tbl-kj"></table></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px" id="kj-note"></div>
+  </div>
+</div>
+
+<!-- 模块2：总表图表分析 -->
+<div class="section">
+  <h2>📋 全员分析面板</h2>
+  <div class="charts-grid">
+    <div class="chart-card"><div class="ch" id="c_pass_pie"></div></div>
+    <div class="chart-card"><div class="ch" id="c_rate_dist"></div></div>
+    <div class="chart-card"><div class="ch" id="c_visit_top"></div></div>
+    <div class="chart-card"><div class="ch" id="c_bu_rate"></div></div>
+  </div>
+</div>
+
+<!-- 模块3：数据统计 -->
+<div class="section">
+  <h2>📊 部门过程量总览（数据统计）</h2>
+  <div class="charts-grid">
+    <div class="chart-card"><div class="ch" id="c_stats_rate"></div></div>
+    <div class="chart-card"><div class="ch" id="c_stats_head"></div></div>
+    <div class="chart-card"><div class="ch" id="c_gauge"></div></div>
+  </div>
+</div>
+
+<!-- 模块4：法律 -->
+<div class="section">
+  <h2>⚖️ 法律事业部专项</h2>
+  <div class="charts-grid">
+    <div class="chart-card"><div class="ch wide" id="c_legal_rate"></div></div>
+    <div class="chart-card"><div class="ch" id="c_legal_visit"></div></div>
+    <div class="chart-card"><div class="ch" id="c_legal_weekly"></div></div>
+    <div class="chart-card"><div class="ch" id="c_legal_perf"></div></div>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ECharts -->
+<script src="/static/echarts.min.js"></script>
+<script>
+(function(){if(typeof echarts==='undefined'){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js';document.head.appendChild(s)}})();
+
+// ===== 状态 =====
+var RAW=null,LAST_MTIME=0,charts={},sortKeyTotal='完成率',sortDirTotal=-1,sortKeyLegal='完成率',sortDirLegal=-1,
+  state={bus:new Set(),dept:'',q:'',auto:true,iv:60000,theme:'light'};
+
+// 主题持久化
+try{var ts=localStorage.getItem('hzb-db-theme');if(ts==='dark'){state.theme='dark';document.body.classList.add('dark');document.getElementById('btn-theme').textContent='☀️ 浅色'}}catch(e){}
+
+// ===== API =====
+function fetchData(cb){
+  fetch('/api/data').then(function(r){return r.json()}).then(function(d){
+    d._loaded=Date.now();
+    var fresh = d.meta.file_mtime_ts !== LAST_MTIME;
+    LAST_MTIME = d.meta.file_mtime_ts;
+    RAW = d;
+    if(fresh) toast('数据已刷新 ✅');
+    if(cb) cb();
+  }).catch(function(e){console.error(e)});
+}
+
+// ===== 渲染入口 =====
+function renderAll(){
+  if(!RAW) return;
+  buildFilters();
+  var r = computeFiltered();
+  renderKPIs(r);
+  renderCharts(r);
+  renderTables(r);
+  updateMeta();
+}
+
+// ===== 筛选 =====
+function buildFilters(){
+  // 事业部chips
+  var bus=new Set();
+  if(RAW.stats) RAW.stats.forEach(function(s){bus.add(s.事业部)});
+  if(RAW.total) RAW.total.forEach(function(t){bus.add(t.事业部)});
+  var html='';
+  bus.forEach(function(b){if(!b)return;
+    html+='<span class="chip'+(state.bus.has(b)?' on':'')+'" onclick="toggleBu(\''+b.replace(/'/g,"\\'")+'\')">'+b+'</span>';
+  });
+  document.getElementById('chip-bu').innerHTML=html+'<span class="chip" onclick="clearBu()">↺ 重置</span>';
+
+  // 部门select
+  var depts=new Set(),sel=document.getElementById('sel-dept');
+  if(RAW.total) RAW.total.forEach(function(t){if(t.部门)depts.add(t.部门)});
+  sel.innerHTML='<option value="">全部部门</option>';
+  depts.forEach(function(d){sel.innerHTML+='<option value="'+d+'">'+d+'</option>'});
+  sel.value=state.dept;
+}
+
+function toggleBu(b){state.bus.has(b)?state.bus.delete(b):state.bus.add(b);applyFilter()}
+function clearBu(){state.bus.clear();applyFilter()}
+function applyFilter(){
+  state.dept=document.getElementById('sel-dept').value;
+  state.q=document.getElementById('search-q').value.trim();
+  renderAll();
+}
+var _searchTimer=null;
+function debounceSearch(){clearTimeout(_searchTimer);_searchTimer=setTimeout(applyFilter,250)}
+function clearSearch(){document.getElementById('search-q').value='';applyFilter()}
+
+function computeFiltered(){
+  var bus=state.bus, dept=state.dept, q=state.q;
+  function ok(item){
+    if(bus.size>0 && !bus.has(item.事业部)) return false;
+    if(dept && item.部门!==dept) return false;
+    if(q && item.姓名.indexOf(q)<0 && item.工号.indexOf(q)<0) return false;
+    return true;
+  }
+  var fStats=RAW.stats?RAW.stats.filter(function(s){
+    if(bus.size>0 && !bus.has(s.事业部)) return false;
+    return true;
+  }):[];
+  var fTotal=RAW.total?RAW.total.filter(ok):[];
+  var fLegal=RAW.legal?RAW.legal.filter(ok):[];
+  return {stats:fStats,total:fTotal,legal:fLegal};
+}
+
+// ===== KPI =====
+function renderKPIs(r){
+  var sum_kh=0,sum_done=0;
+  r.stats.forEach(function(s){sum_kh+=s.考核人数||0;sum_done+=s.当天目标已完成||0});
+  var rate_all=sum_kh>0?sum_done/sum_kh:null;
+
+  var total_n=r.total.length;
+  var pass_n=r.total.filter(function(t){return t.是否达标==='达标'}).length;
+  var fail_n=r.total.filter(function(t){return t.是否达标==='不达标'}).length;
+  var skip_n=r.total.filter(function(t){return t.是否达标==='免考核'}).length;
+  var pass_rate=total_n>0?(pass_n/total_n*100).toFixed(0):null;
+
+  var avg_rate_total=0,cnt_r=0;
+  r.total.forEach(function(t){if(t.完成率!=null){avg_rate_total+=t.完成率;cnt_r++}});
+  avg_rate_total=cnt_r>0?avg_rate_total/cnt_r:0;
+
+  var visit_sum=0;r.total.forEach(function(t){visit_sum+=t.见客合计||0});
+
+  var legal_perf=0;r.legal.forEach(function(t){legal_perf+=t.当日新增业绩||0});
+  var legal_rate_avg=0;r.legal.forEach(function(t){if(t.完成率!=null)legal_rate_avg+=t.完成率});
+  legal_rate_avg=r.legal.length>0?legal_rate_avg/r.legal.length:0;
+
+  var legal_wpass=0;r.legal.forEach(function(t){if(t.周达标情况&&t.周达标情况.indexOf('合格')>=0&&t.周达标情况.indexOf('不')<0)legal_wpass++});
+
+  var cards=[
+    {l:'考核总人数',v:sum_kh,sub:'覆盖 '+r.stats.length+' 个部门',c:'var(--kpi0)'},
+    {l:'当天目标已完成',v:sum_done,sub:rate_all!=null?'整体完成率 '+(rate_all*100).toFixed(1)+'%':'--',c:'var(--kpi1)'},
+    {l:'全员人数（总表）',v:total_n,sub:'达标 '+pass_n+' · 免考 '+skip_n+' · 未达标 '+fail_n,c:'var(--kpi2)'},
+    {l:'人均完成率',v:pass_rate+'%',c:'var(--kpi3)',sub:'平均 '+(avg_rate_total*100).toFixed(1)+'%'},
+    {l:'总见客合计',v:visit_sum,sub:total_n>0?'人均 '+(visit_sum/total_n).toFixed(1):'--',c:'var(--kpi4)'},
+    {l:'法律新增业绩',v:'¥'+legal_perf.toLocaleString(),c:'var(--kpi5)'},
+    {l:'法律完成率均值',v:(legal_rate_avg*100).toFixed(1)+'%',c:'var(--kpi6)',sub:'周合格 '+legal_wpass+' 人'},
+    {l:'快照时间',v:(RAW.meta.data_time||'').slice(-8)||'--',sub:(RAW.meta.file_mtime||'').slice(11)||'--',c:'var(--kpi7)'}
+  ];
+  var html='';
+  cards.forEach(function(c){html+='<div class="kpi-card" style="border-left-color:'+c.c+'"><div class="kpi-label">'+c.l+'</div><div class="kpi-val" style="color:'+c.c+'">'+c.v+'</div><div class="kpi-sub">'+c.sub+'</div></div>'});
+  document.getElementById('kpi-grid').innerHTML=html;
+}
+
+// ===== 表格 =====
+function renderTables(r){
+  var total=r.total.slice().sort(function(a,b){
+    var va=a[sortKeyTotal]||0,vb=b[sortKeyTotal]||0;return va>vb?sortDirTotal:va<vb?-sortDirTotal:0;
+  });
+
+  var ths=['姓名','事业部','部门','目标','完成<sub>通时</sub>','完成率','周活动量','见客','是否达标'];
+  var keys=['姓名','事业部','部门','目标','完成','完成率','周活动量','见客合计','是否达标'];
+  var html='<thead><tr>';
+  for(var i=0;i<ths.length;i++) html+='<th onclick="setSortTotal(\''+keys[i]+'\')">'+(keys[i]===sortKeyTotal?(sortDirTotal>0?'▲ ':'▼ '):'')+ths[i]+'</th>';
+  html+='</tr></thead><tbody>';
+  if(total.length===0){html+='<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">无匹配结果</td></tr>';}
+  else{
+  total.forEach(function(t){
+    var r8=t.完成率!=null?(t.完成率*100).toFixed(1)+'%':'--';
+    var r_bar='';if(t.完成率!=null)r_bar='<span class="rate-bar" style="width:'+Math.min(t.完成率*120,120)+'px;background:'+rateColor(t.完成率)+'"></span>';
+    var badge='';if(t.是否达标==='达标')badge='<span class="badge pass">达标</span>';
+    else if(t.是否达标==='不达标')badge='<span class="badge fail">未达标</span>';
+    else badge='<span class="badge skip">免考</span>';
+    html+='<tr><td><b>'+t.姓名+'</b></td><td>'+t.事业部+'</td><td>'+t.部门+'</td><td>'+fmtNum(t.目标)+'</td><td>'+fmtNum(t.完成)+'</td><td>'+r_bar+r8+'</td><td>'+t.周活动量+'</td><td>'+fmtNum(t.见客合计)+'</td><td>'+badge+'</td></tr>';
+  });
+  }
+  html+='</tbody>';document.getElementById('tbl-total').innerHTML=html;
+  document.getElementById('total-count').textContent='显示 '+total.length+' / '+(RAW.total||[]).length+' 人';
+
+  // 法律日达标表（重点：日考核是否达标，弱化周考核）
+  var legal=r.legal.slice();
+  ths=['日达标','姓名','部门','今日完成','滚动2日','滚动3日','完成率','上门','外出','线上','新增业绩'];
+  keys=['是否达标','姓名','部门','今日完成','滚动2日完成','滚动3日完成','完成率','当日上门量','当日外出量','当日线上见客量','当日新增业绩'];
+  html='<thead><tr>';
+  for(var i=0;i<ths.length;i++) html+='<th onclick="setSortLegal(\''+keys[i]+'\')">'+(keys[i]===sortKeyLegal?(sortDirLegal>0?'▲ ':'▼ '):'')+ths[i]+'</th>';
+  html+='</tr></thead><tbody>';
+  if(legal.length===0){html+='<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:24px">无匹配结果</td></tr>';}
+  else{
+  legal.forEach(function(t){
+    var r8=t.完成率!=null?(t.完成率*100).toFixed(1)+'%':'#REF!';
+    var badge='';if(t.是否达标==='达标')badge='<span class="badge pass">达标</span>';
+    else if(t.是否达标==='不达标')badge='<span class="badge fail">未达标</span>';
+    else badge='<span class="badge skip">免考</span>';
+    html+='<tr><td>'+badge+'</td><td><b>'+t.姓名+'</b></td><td>'+t.部门+'</td><td>'+fmtNum(t.今日完成)+'</td><td>'+fmtNum(t.滚动2日完成)+'</td><td>'+fmtNum(t.滚动3日完成)+'</td><td>'+r8+'</td><td>'+fmtNum(t.当日上门量)+'</td><td>'+fmtNum(t.当日外出量)+'</td><td>'+fmtNum(t.当日线上见客量)+'</td><td>'+fmtNum(t.当日新增业绩)+'</td></tr>';
+  });
+  }
+  html+='</tbody>';document.getElementById('tbl-legal').innerHTML=html;
+  // 法律 tab 计数
+  document.getElementById('tab-legal').textContent='⚖️ 法律日达标 ('+legal.length+')';
+  document.getElementById('tab-total').textContent='📋 全员明细（总表）('+total.length+')';
+  renderKjTable();
+}
+
+function switchTab(name){
+  document.getElementById('tab-total').className='tab'+(name==='total'?' on':'');
+  document.getElementById('tab-legal').className='tab'+(name==='legal'?' on':'');
+  var tabKj=document.getElementById('tab-kj');
+  if(tabKj) tabKj.className='tab'+(name==='kj'?' on':'');
+  document.getElementById('panel-total').className='tab-panel'+(name==='total'?' on':'');
+  document.getElementById('panel-legal').className='tab-panel'+(name==='legal'?' on':'');
+  var pKj=document.getElementById('panel-kj');
+  if(pKj) pKj.className='tab-panel'+(name==='kj'?' on':'');
+}
+
+function setSortTotal(k){if(k===sortKeyTotal)sortDirTotal*=-1;else{sortKeyTotal=k;sortDirTotal=-1}renderAll()}
+function setSortLegal(k){if(k===sortKeyLegal)sortDirLegal*=-1;else{sortKeyLegal=k;sortDirLegal=-1}renderAll()}
+
+// ===== 会计「活动量完成情况」=====
+// 总表 sheet 不含会计人员，会计数据单独来自 sheet「会计」（data.kj_activity），
+// 目的是让会计员工能在活动量看板直接看到自己的逐项达标情况。
+function renderKjTable(){
+  var ka=RAW&&RAW.kj_activity;
+  var tabKj=document.getElementById('tab-kj');
+  var pKj=document.getElementById('panel-kj');
+  if(!tabKj||!pKj) return;
+  if(!ka||!ka.rows||!ka.rows.length){ tabKj.style.display='none'; return; }
+  tabKj.style.display='';
+  tabKj.textContent='🧮 会计达标 ('+ka.total+')';
+
+  // 顶部 4 张 KPI 卡：让员工一眼看到整体达标情况
+  var s=ka.summary||{};
+  var pass=s['周活动量合格']||0, fail=s['周活动量不合格']||0, norm=s['正常考核']||0;
+  var dayPass=0, dayFail=0, daySkip=0;
+  ka.rows.forEach(function(x){
+    if(x.是否达标==='达标')dayPass++;
+    else if(x.是否达标==='免考核')daySkip++;
+    else if(x.是否达标==='不达标')dayFail++;
+  });
+  var wkRate=(pass+fail)>0?(pass/(pass+fail)*100).toFixed(0)+'%':'--';
+  var cards=[
+    {l:'会计在册人数',v:ka.total,sub:norm+' 人正常考核 · '+(s['免考核']||0)+' 人免考核',c:'var(--kpi0)'},
+    {l:'今日达标',v:dayPass,sub:'未达标 '+dayFail+' · 免考 '+daySkip,c:'var(--kpi1)'},
+    {l:'周活动量合格',v:pass,sub:'不合格 '+fail+' 人',c:'var(--kpi3)'},
+    {l:'周合格率',v:wkRate,sub:'口径：正常考核人数',c:'var(--kpi2)'}
+  ];
+  var kh='';
+  cards.forEach(function(c){
+    kh+='<div class="kpi-card" style="border-left-color:'+c.c+'"><div class="kpi-label">'+c.l+'</div>'
+      +'<div class="kpi-val" style="color:'+c.c+'">'+c.v+'</div><div class="kpi-sub">'+c.sub+'</div></div>';
+  });
+  document.getElementById('kj-kpi').innerHTML=kh;
+
+  // 逐人明细：先「不达标」再「达标」，让需要改进的人排在最前
+  var rows=ka.rows.slice().sort(function(a,b){
+    var w={'不达标':0,'免考核':1,'达标':2};
+    var d=(w[a.是否达标]===undefined?3:w[a.是否达标])-(w[b.是否达标]===undefined?3:w[b.是否达标]);
+    if(d!==0) return d;
+    return (a.姓名||'').localeCompare(b.姓名||'','zh');
+  });
+  var html='<thead><tr><th>姓名</th><th>岗位</th><th>工号</th><th>今日达标</th><th>周活动量</th>'
+    +'<th>出勤</th><th>见客量</th><th>全民营销</th><th>当日通时</th><th>当日新增业绩</th><th>考核类型</th></tr></thead><tbody>';
+  if(rows.length===0){ html+='<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:24px">无匹配结果</td></tr>'; }
+  else{
+  rows.forEach(function(x){
+    var b='';
+    if(x.是否达标==='达标')b='<span class="badge pass">达标</span>';
+    else if(x.是否达标==='不达标')b='<span class="badge fail">未达标</span>';
+    else b='<span class="badge skip">免考</span>';
+    var wb=(x.周活动量==='合格')?'<span class="badge pass">合格</span>'
+      :(x.周活动量==='不合格'?'<span class="badge fail">不合格</span>':(x.周活动量||'--'));
+    var perf=(x.当日新增业绩||0)>0?'¥'+Number(x.当日新增业绩).toLocaleString():'<span style="color:var(--muted)">0</span>';
+    html+='<tr><td><b>'+x.姓名+'</b></td><td>'+(x.岗位||'--')+'</td><td>'+(x.工号||'--')+'</td>'
+      +'<td>'+b+'</td><td>'+wb+'</td><td>'+(x.出勤||0)+'</td><td>'+(x.见客量||0)+'</td>'
+      +'<td>'+(x.全民营销||0)+'</td><td>'+(x.通时||0)+'</td><td>'+perf+'</td>'
+      +'<td>'+(x.考核类型||'正常考核')+'</td></tr>';
+  });
+  }
+  html+='</tbody>';
+  document.getElementById('tbl-kj').innerHTML=html;
+  document.getElementById('kj-note').textContent=
+    '数据源：某公司活动量-在线看板.xlsx · sheet「会计」（解析时间 '+((ka.data_time||'').slice(5)||'--')+'）'
+    +'　·　周活动量为滚动周考核口径，与「今日达标」相互独立';
+}
+
+// ===== 图表 =====
+function echTheme(){
+  return {text:state.theme==='dark'?'#e2e8f0':'#333',subtext:state.theme==='dark'?'#94a3b8':'#666',axis:'#aaa',split:state.theme==='dark'?'#334155':'#e5e7eb'};
+}
+function rateColor(v){if(v==null)return'#aaa';return v>=1?'#16a34a':v>=.5?'#f59e0b':'#dc2626'}
+function fmtNum(v){if(v==null)return'--';if(typeof v==='number')return v>=100?v.toFixed(0):v>=10?v.toFixed(1):v.toFixed(2);return v}
+
+function renderCharts(r){
+  var c=echTheme();
+  chartStatsRate(r,c);
+  chartStatsHead(r,c);
+  chartGauge(r,c);
+  chartPassPie(r,c);
+  chartRateDist(r,c);
+  chartVisitTop(r,c);
+  chartBuRate(r,c);
+  chartLegalRate(r,c);
+  chartLegalVisit(r,c);
+  chartLegalWeekly(r,c);
+  chartLegalPerf(r,c);
+}
+
+function initOrGet(id){
+  if(!charts[id])charts[id]=echarts.init(document.getElementById(id));
+  charts[id].clear();return charts[id];
+}
+
+function chartStatsRate(r,c){
+  var d=r.stats.slice().sort(function(a,b){return(a.当天目标完成率||0)-(b.当天目标完成率||0)});
+  var cats=[],vals=[];d.forEach(function(s){cats.push(s.部门+'\n('+s.事业部+')');vals.push((s.当天目标完成率||0)*100)});
+  var colors=vals.map(function(v){return v>=80?'#16a34a':v>=50?'#f59e0b':'#dc2626'});
+  var opt={tooltip:{formatter:function(p){return p.name+'<br/>完成率: <b>'+p.value.toFixed(1)+'%</b>'}},grid:{left:180,right:30,top:10,bottom:20},xAxis:{type:'value',splitLine:{lineStyle:{color:c.split}},max:100,axisLabel:{formatter:'{value}%'}},yAxis:{type:'category',data:cats,inverse:true,axisLabel:{fontSize:11},axisLine:{onZero:false}},series:[{type:'bar',data:vals.map(function(v,i){return{value:v,itemStyle:{color:colors[i],borderRadius:[0,4,4,0]}}}),label:{show:true,position:'right',formatter:function(p){return p.value.toFixed(0)+'%'},color:c.text}}]};
+  initOrGet('c_stats_rate').setOption(opt);
+}
+
+function chartStatsHead(r,c){
+  var d=r.stats.slice();var cats=[],kh=[],all=[];
+  d.forEach(function(s){cats.push(s.部门.replace('<CITY>','').length>8?s.部门.replace('<CITY>','').slice(0,8)+'..':s.部门.replace('<CITY>',''));kh.push(s.考核人数||0);all.push(s.总人数||0)});
+  var opt={tooltip:{},legend:{data:['总人数','考核人数'],bottom:0,textStyle:{color:c.text}},grid:{left:50,right:20,top:10,bottom:36},xAxis:{type:'category',data:cats,axisLabel:{rotate:30,fontSize:10},axisLine:{lineStyle:{color:c.axis}}},yAxis:{type:'value',splitLine:{lineStyle:{color:c.split}}},series:[{name:'总人数',type:'bar',data:all,itemStyle:{color:'#93c5fd',borderRadius:[4,4,0,0]}},{name:'考核人数',type:'bar',data:kh,itemStyle:{color:'#4f46e5',borderRadius:[4,4,0,0]}}]};
+  initOrGet('c_stats_head').setOption(opt);
+}
+
+function chartGauge(r,c){
+  var val=RAW.stats_total?RAW.stats_total.当天目标完成率:null;if(val==null)val=0;
+  var opt={series:[{type:'gauge',min:0,max:1,splitNumber:10,pointer:{show:true,length:'70%',width:6},detail:{formatter:function(v){return(v*100).toFixed(1)+'%'},fontSize:28,offsetCenter:[0,'60%'],color:'#4f46e5'},axisLine:{lineStyle:{width:16,color:[[0.3,'#dc2626'],[0.6,'#f59e0b'],[1,'#16a34a']]}},axisTick:{distance:-19,length:5},splitLine:{distance:-22,length:10},data:[{value:val,name:'整体完成率'}]}]};
+  initOrGet('c_gauge').setOption(opt);
+}
+
+function chartPassPie(r,c){
+  var pass=0,fail=0,skip=0;r.total.forEach(function(t){if(t.是否达标==='达标')pass++;else if(t.是否达标==='不达标')fail++;else skip++});
+  var opt={title:{text:'是否达标分布',left:'center',top:5,textStyle:{fontSize:14,color:c.text}},tooltip:{trigger:'item'},legend:{bottom:0,textStyle:{color:c.text}},series:[{type:'pie',radius:['45%','72%'],center:['50%','52%'],label:{formatter:function(p){return p.name+'\n'+p.value+'人 ('+p.percent+'%)'}},emphasis:{itemStyle:{shadowBlur:10,shadowOffsetX:0,shadowColor:'rgba(0,0,0,.2)'}},data:[{value:pass,name:'达标',itemStyle:{color:'#16a34a'}},{value:skip,name:'免考核',itemStyle:{color:'#93c5fd'}},{value:fail,name:'不达标',itemStyle:{color:'#dc2626'}}]}]};
+  initOrGet('c_pass_pie').setOption(opt);
+}
+
+function chartRateDist(r,c){
+  var buckets={'0-20%':0,'20-40%':0,'40-60%':0,'60-80%':0,'80-100%':0,'100%+':0};
+  r.total.forEach(function(t){var v=(t.完成率||0);if(v<0.2)buckets['0-20%']++;else if(v<0.4)buckets['20-40%']++;else if(v<0.6)buckets['40-60%']++;else if(v<0.8)buckets['60-80%']++;else if(v<1)buckets['80-100%']++;else buckets['100%+']++});
+  var ks=Object.keys(buckets),vs=Object.values(buckets);
+  var clrs=['#dc2626','#f97316','#f59e0b','#a3e635','#16a34a','#0891b2'];
+  var opt={title:{text:'完成率分布直方图',left:'center',textStyle:{fontSize:14,color:c.text}},tooltip:{},xAxis:{type:'category',data:ks,axisLabel:{color:c.text}},yAxis:{type:'value',splitLine:{lineStyle:{color:c.split}}},series:[{type:'bar',data:vs.map(function(v,i){return{value:v,itemStyle:{color:clrs[i],borderRadius:[4,4,0,0]}}}),label:{show:true,position:'top',formatter:function(p){return p.value||''}}}]};
+  initOrGet('c_rate_dist').setOption(opt);
+}
+
+function chartVisitTop(r,c){
+  var d=r.total.slice().sort(function(a,b){return(b.见客合计||0)-(a.见客合计||0)}).slice(0,10);
+  var cats=[],vals=[];d.forEach(function(t){cats.push(t.姓名);vals.push(t.见客合计||0)});
+  var opt={title:{text:'见客合计 TOP10',left:'center',textStyle:{fontSize:14,color:c.text}},tooltip:{},grid:{left:80,right:30,top:40,bottom:24},xAxis:{type:'value',splitLine:{lineStyle:{color:c.split}}},yAxis:{type:'category',data:cats.reverse(),inverse:true,axisLabel:{fontSize:11}},series:[{type:'bar',data:vals.reverse(),itemStyle:{color:'#4f46e5',borderRadius:[0,4,4,0]},label:{show:true,position:'right',color:c.text}}]};
+  initOrGet('c_visit_top').setOption(opt);
+}
+
+function chartBuRate(r,c){
+  var bus={};r.total.forEach(function(t){if(!t.事业部)return;if(!bus[t.事业部])bus[t.事业部]={sum:0,cnt:0};var r8=t.完成率;if(r8!=null){bus[t.事业部].sum+=r8;bus[t.事业部].cnt++}});
+  var cats=[],vals=[];
+  for(var k in bus){cats.push(k.replace('<CITY>事业部','').replace('<CITY>','').replace('事业部',''));vals.push(bus[k].cnt>0?(bus[k].sum/bus[k].cnt*100).toFixed(1):0)}
+  var opt={title:{text:'各事业部平均完成率',left:'center',textStyle:{fontSize:14,color:c.text}},tooltip:{formatter:function(p){return p.name+'<br/>平均完成率: <b>'+p.value+'%</b>'}},grid:{left:110,right:30,top:40,bottom:24},xAxis:{type:'value',splitLine:{lineStyle:{color:c.split}},max:100,axisLabel:{formatter:'{value}%'}},yAxis:{type:'category',data:cats,inverse:true,axisLabel:{fontSize:11}},series:[{type:'bar',data:vals.map(function(v,i){return{value:v,itemStyle:{color:vals[i]>=80?'#16a34a':vals[i]>=50?'#f59e0b':'#dc2626',borderRadius:[0,4,4,0]}}}),label:{show:true,position:'right',formatter:function(p){return p.value+'%'},color:c.text}}]};
+  initOrGet('c_bu_rate').setOption(opt);
+}
+
+function chartLegalRate(r,c){
+  var cats=[],t1=[],t2=[],t3=[];
+  r.legal.forEach(function(t){cats.push(t.姓名);t1.push((t.完成率||0)*100);t2.push(t.滚动2日完成||0);t3.push(t.滚动3日完成||0)});
+  cats.push('总/均');t1.push(t1.length>0?(eval(t1.join('+'))/t1.length).toFixed(1):0);t2.push(0);t3.push(0);
+  var opt={title:{text:'法律 · 完成率 & 滚动完成',left:'center',textStyle:{fontSize:14,color:c.text}},tooltip:{},legend:{data:['完成率%','滚动2日完成','滚动3日完成'],bottom:0,textStyle:{color:c.text}},grid:{left:50,right:20,top:40,bottom:40},xAxis:{type:'category',data:cats,axisLabel:{rotate:25,fontSize:10}},yAxis:{type:'value',splitLine:{lineStyle:{color:c.split}}},series:[{name:'完成率%',type:'bar',data:t1,itemStyle:{color:'#8b5cf6',borderRadius:[4,4,0,0]}},{name:'滚动2日完成',type:'bar',data:t2,itemStyle:{color:'#06b6d4',borderRadius:[4,4,0,0]}},{name:'滚动3日完成',type:'bar',data:t3,itemStyle:{color:'#84cc16',borderRadius:[4,4,0,0]}}]};
+  initOrGet('c_legal_rate').setOption(opt);
+}
+
+function chartLegalVisit(r,c){
+  var cats=[],up=[],out=[],online=[];
+  r.legal.forEach(function(t){cats.push(t.姓名);up.push(t.当日上门量||0);out.push(t.当日外出量||0);online.push(t.当日线上见客量||0)});
+  var opt={title:{text:'法律 · 见客结构',left:'center',textStyle:{fontSize:14,color:c.text}},tooltip:{trigger:'item'},legend:{data:['上门','外出','线上'],bottom:0,textStyle:{color:c.text}},grid:{left:50,right:20,top:40,bottom:40},xAxis:{type:'category',data:cats,axisLabel:{fontSize:10}},yAxis:{type:'value',splitLine:{lineStyle:{color:c.split}}},series:[{name:'上门',type:'bar',stack:'x',data:up,itemStyle:{color:'#a78bfa'}},{name:'外出',type:'bar',stack:'x',data:out,itemStyle:{color:'#f472b6'}},{name:'线上',type:'bar',stack:'x',data:online,itemStyle:{color:'#34d399'}}]};
+  initOrGet('c_legal_visit').setOption(opt);
+}
+
+function chartLegalWeekly(r,c){
+  var ok=0,nok=0;r.legal.forEach(function(t){if(t.周达标情况&&t.周达标情况.indexOf('合格')>=0&&t.周达标情况.indexOf('不')<0)ok++;else nok++});
+  var opt={title:{text:'法律 · 周达标情况',left:'center',textStyle:{fontSize:14,color:c.text}},series:[{type:'pie',radius:['55%','70%'],center:['50%','52%'],label:{formatter:function(p){return p.name+'\n'+p.value+'人'}},emphasis:{itemStyle:{shadowBlur:10,shadowOffsetX:0,shadowColor:'rgba(0,0,0,.2)'}},data:[{value:ok,name:'合格',itemStyle:{color:'#16a34a'}},{value:nok,name:'不合格/未计算',itemStyle:{color:'#f59e0b'}}]}]};
+  initOrGet('c_legal_weekly').setOption(opt);
+}
+
+function chartLegalPerf(r,c){
+  var cats=[],vals=[];
+  r.legal.forEach(function(t){cats.push(t.姓名);vals.push(t.当日新增业绩||0)});
+  var opt={title:{text:'法律 · 当日新增业绩(元)',left:'center',textStyle:{fontSize:14,color:c.text}},tooltip:{},grid:{left:100,right:30,top:40,bottom:24},xAxis:{type:'value',splitLine:{lineStyle:{color:c.split}}},yAxis:{type:'category',data:cats.reverse(),inverse:true},series:[{type:'bar',data:vals.reverse().map(function(v){return{value:v,itemStyle:{color:v>0?'#16a34a':'#93c5fd',borderRadius:[0,4,4,0]}}}),label:{show:true,position:'right',formatter:function(p){return p.value?p.value.toLocaleString():''},color:c.text}}]};
+  initOrGet('c_legal_perf').setOption(opt);
+}
+
+// ===== Meta =====
+function updateMeta(){
+  document.getElementById('meta-dt').textContent=RAW.meta.data_time||'--';
+  document.getElementById('meta-mt').textContent=(RAW.meta.file_mtime||'').slice(11)||'--';
+  document.getElementById('meta-status').textContent='就绪 · '+(state.auto?'自动刷新中':'手动模式');
+}
+
+// ===== Refresh =====
+var countdownTimer=null,countdownVal=state.iv/1000;
+function startRefresh(){
+  clearInterval(countdownTimer);clearInterval(window.__pollTimer);
+  if(state.auto && state.iv>0){
+    countdownVal=state.iv/1000;
+    document.getElementById('countdown').textContent=countdownVal;
+    countdownTimer=setInterval(function(){countdownVal--;document.getElementById('countdown').textContent=Math.max(countdownVal,0)},1000);
+    window.__pollTimer=setInterval(function(){countdownVal=state.iv/1000;fetchData(renderAll)},state.iv);
+    document.getElementById('live-dot').style.background='var(--green)';
+  }else{
+    document.getElementById('countdown').textContent='--';
+    document.getElementById('live-dot').style.background='var(--red)';
+  }
+}
+
+function setMyInterval(){
+  var v=parseInt(document.getElementById('sel-interval').value)*1000;
+  state.iv=v;state.auto=v>0;startRefresh();
+}
+
+function manualRefresh(){fetchData(renderAll);countdownVal=state.iv/1000;document.getElementById('countdown').textContent=countdownVal}
+
+
+// ===== Theme =====
+function toggleTheme(){
+  state.theme=state.theme==='light'?'dark':'light';
+  document.body.classList.toggle('dark',state.theme==='dark');
+  document.getElementById('btn-theme').textContent=state.theme==='dark'?'☀️ 浅色':'🌙 深色';
+  localStorage.setItem('hzb-db-theme',state.theme);
+  var d=computeFiltered();renderCharts(d);
+}
+
+// ===== Export =====
+function exportCSV(){
+  var total=RAW.total||[];if(!total.length)return;
+  var keys=['姓名','事业部','部门','岗位','工号','入职日期','是否达标','目标','完成','完成率','周活动量','见客合计'];
+  var csv='\uFEFF'+keys.join(',')+'\n';
+  total.forEach(function(t){csv+=keys.map(function(k){var v=t[k];if(v==null)return'';if(typeof v==='string')return'"'+v.replace(/"/g,'""')+'"';return v}).join(',')+'\n'});
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='<CITY>活动量_总表_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+
+function toast(msg){
+  var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show')},2000);
+}
+
+// ===== 起手 =====
+fetchData(function(){state.iv=20000;state.auto=true;startRefresh();renderAll()});
+window.addEventListener('resize',function(){for(var k in charts)charts[k].resize()});
+</script>
+
+<script>
+/* ========== 历史数据查询（单选/多选天数 + 按月统计） ========== */
+(function () {
+  "use strict";
+  var HISTORY = [];        // [{date, data:{stats,total,legal,meta}}]
+  var histActive = false;  // 面板是否开启
+  var histSel = {};        // 选中日期集合
+  var selMonth = "";       // 月份筛选
+  var latestRAW = null;    // 最新实时数据备份（来自 fetchData 回调）
+  var trendChart = null;
+  var loaded = false;
+
+  function $(id) { return document.getElementById(id); }
+  function fmtDate(d) { var p = String(d).split("-"); return p.length === 3 ? p[1] + "-" + p[2] : d; }
+  function sumArr(arr, k) { return (arr || []).reduce(function (s, x) { return s + (Number(x[k]) || 0); }, 0); }
+  function findDate(d) { for (var i = 0; i < HISTORY.length; i++) if (HISTORY[i].date === d) return HISTORY[i]; return null; }
+  function selDays() { return Object.keys(histSel).sort(); }
+
+  function loadHistory(cb) {
+    function ok(d) { HISTORY = (d && Array.isArray(d)) ? d : []; loaded = true; if (cb) cb(); }
+    function fail() {
+      fetch("history.json", { cache: "no-store" }).then(function (r) { return r.json(); })
+        .then(ok).catch(function () { loaded = true; if (cb) cb(); });
+    }
+    if (typeof fetch !== "function") { loaded = true; if (cb) cb(); return; }
+    fetch("/api/history", { cache: "no-store" }).then(function (r) {
+      if (!r.ok) throw new Error("status " + r.status);
+      return r.json();
+    }).then(ok).catch(fail);
+  }
+
+  function toggleHist() {
+    histActive = !histActive;
+    $("hist-panel").style.display = histActive ? "flex" : "none";
+    $("btn-hist").classList.toggle("act", histActive);
+    if (histActive) {
+      if (!loaded) loadHistory(function () { populate(); apply(); });
+      else { populate(); apply(); }
+    } else {
+      histSel = {}; selMonth = ""; $("sel-month").value = "";
+      setRAW(latestRAW || window.RAW);
+      renderAll();
+    }
+  }
+
+  function populate() {
+    var months = {}, msel = $("sel-month"), cur = msel.value;
+    HISTORY.forEach(function (h) { var m = (h.date || "").slice(0, 7); if (m) months[m] = 1; });
+    var opts = Object.keys(months).sort().reverse();
+    msel.innerHTML = '<option value="">全部月份</option>' + opts.map(function (m) { return '<option value="' + m + '">' + m + '</option>'; }).join("");
+    if (selMonth) msel.value = selMonth; else if (cur) msel.value = cur;
+    renderDays();
+  }
+
+  function renderDays() {
+    var box = $("hist-days");
+    var days = HISTORY.filter(function (h) { return !selMonth || (h.date || "").indexOf(selMonth) === 0; });
+    if (!days.length) { box.innerHTML = '<span style="font-size:12px;color:var(--muted)">（该月份暂无历史数据）</span>'; return; }
+    box.innerHTML = "";
+    days.forEach(function (h) {
+      var c = document.createElement("span");
+      c.className = "chip" + (histSel[h.date] ? " on" : "");
+      c.textContent = fmtDate(h.date);
+      c.title = (h.data.meta && h.data.meta.data_time) ? h.date + " 数据时间 " + h.data.meta.data_time : h.date;
+      c.addEventListener("click", function () { toggleDay(h.date); });
+      box.appendChild(c);
+    });
+  }
+
+  function toggleDay(d) {
+    if (histSel[d]) delete histSel[d]; else histSel[d] = true;
+    renderDays(); apply();
+  }
+  function histAll() {
+    histSel = {};
+    HISTORY.forEach(function (h) { histSel[h.date] = true; });
+    renderDays(); apply();
+  }
+  function histClear() {
+    histSel = {}; selMonth = ""; $("sel-month").value = "";
+    renderDays(); setRAW(latestRAW || window.RAW); apply();
+  }
+
+  function setRAW(d) { window.RAW = d; }
+
+  /* ---- 聚合（跟随 事业部/部门/搜索 筛选，仅分析所选天数） ---- */
+  function filteredOf(d) {
+    var bus = (window.state && window.state.bus) || new Set();
+    var dept = $("sel-dept") ? $("sel-dept").value : "";
+    var q = $("search-q") ? $("search-q").value.trim() : "";
+    function okT(x) {
+      if (bus.size && !bus.has(x["事业部"])) return false;
+      if (dept && x["部门"] !== dept) return false;
+      if (q && String(x["姓名"] || "").indexOf(q) < 0 && String(x["工号"] || "").indexOf(q) < 0) return false;
+      return true;
+    }
+    return {
+      stats: (d.stats || []).filter(function (s) { return !(bus.size && !bus.has(s["事业部"])); }),
+      total: (d.total || []).filter(okT),
+      legal: (d.legal || []).filter(okT)
+    };
+  }
+  function aggDay(h) {
+    var f = filteredOf(h.data || {}), s = f.stats, t = f.total, l = f.legal;
+    var kh = sumArr(s, "考核人数"), done = sumArr(s, "当天目标已完成");
+    var pass = t.filter(function (x) { return x["是否达标"] === "达标"; }).length;
+    return { date: h.date, kh: kh, done: done, rate: kh > 0 ? done / kh : null, n: t.length,
+             pass: pass, visit: sumArr(t, "见客合计"), perf: sumArr(l, "当日新增业绩") };
+  }
+
+  /* 自动生成的分析结论（仅基于所选天数） */
+  function renderAnalysis(rows, days, wRate, deptRows, visit, pass, perf) {
+    var bullets = [];
+    if (rows.length >= 2) {
+      var first = rows[0], last = rows[rows.length - 1];
+      if (first.rate != null && last.rate != null) {
+        var delta = last.rate - first.rate;
+        var trend = delta > 0.005 ? "上升" : delta < -0.005 ? "下降" : "基本持平";
+        bullets.push("加权完成率从 " + fmtDate(days[0]) + " 的 " + (first.rate * 100).toFixed(1) + "% → " + fmtDate(days[days.length - 1]) + " 的 " + (last.rate * 100).toFixed(1) + "%，整体" + trend + (Math.abs(delta) >= 0.005 ? "（" + (delta > 0 ? "+" : "") + (delta * 100).toFixed(1) + " 个百分点）" : ""));
+      }
+    }
+    var best = null, worst = null;
+    rows.forEach(function (r) {
+      if (r.rate == null) return;
+      if (!best || r.rate > best.rate) best = r;
+      if (!worst || r.rate < worst.rate) worst = r;
+    });
+    if (best) bullets.push("完成率最高：" + fmtDate(best.date) + "（" + (best.rate * 100).toFixed(1) + "%）；最低：" + fmtDate(worst.date) + "（" + (worst.rate * 100).toFixed(1) + "%）");
+    if (pass > 0) bullets.push("累计达标人次 " + pass + "（日均 " + (pass / rows.length).toFixed(1) + "）");
+    var rated = deptRows.filter(function (v) { return v.rate != null; }).slice().sort(function (a, b) { return b.rate - a.rate; });
+    if (rated.length) {
+      var bd = rated[0], wd = rated[rated.length - 1];
+      bullets.push("部门表现最佳：" + bd.dept + "（" + (bd.rate * 100).toFixed(1) + "%，完成 " + bd.done + "）；待提升：" + wd.dept + "（" + (wd.rate * 100).toFixed(1) + "%，完成 " + wd.done + "）");
+    }
+    bullets.push("累计见客 " + visit + " 次 · 累计法律业绩 ¥" + perf.toLocaleString() + " · 全员累计 " + rows.reduce(function (s, r) { return s + r.n; }, 0) + " 人次");
+    if (!bullets.length) bullets.push("所选天数暂无匹配数据");
+    return '<div class="section"><h2>🧠 分析结论（基于所选 ' + rows.length + ' 天）</h2><div style="background:var(--card);border-radius:var(--radius);padding:12px 16px;box-shadow:var(--shadow);font-size:13px;line-height:2">' +
+      bullets.map(function (b) { return "• " + b; }).join("<br>") + '</div></div>';
+  }
+
+  function renderTrend(rows) {
+    var el = $("hist-trend"); if (!el) return;
+    if (trendChart) { trendChart.dispose(); trendChart = null; }
+    if (typeof echarts === "undefined") return;
+    trendChart = echarts.init(el);
+    trendChart.setOption({
+      tooltip: { trigger: "axis" },
+      legend: { data: ["完成率%", "达标人次"], top: 0 },
+      grid: { left: 44, right: 44, top: 32, bottom: 28 },
+      xAxis: { type: "category", data: rows.map(function (r) { return fmtDate(r.date); }), axisLabel: { color: "#888" } },
+      yAxis: [
+        { type: "value", name: "完成率%", axisLabel: { color: "#888" } },
+        { type: "value", name: "达标人次", axisLabel: { color: "#888" } }
+      ],
+      series: [
+        { name: "完成率%", type: "line", smooth: true, connectNulls: true, data: rows.map(function (r) { return r.rate != null ? +(r.rate * 100).toFixed(1) : null; }), itemStyle: { color: "#4f46e5" } },
+        { name: "达标人次", type: "bar", yAxisIndex: 1, data: rows.map(function (r) { return r.pass; }), itemStyle: { color: "#16a34a" } }
+      ]
+    });
+  }
+
+  function renderHistSummary() {
+    var days = selDays();
+    var items = days.map(findDate).filter(Boolean);
+    if (!items.length) return;
+    var rows = items.map(aggDay);
+    var kh = 0, done = 0, visit = 0, pass = 0, perf = 0, n = 0;
+    rows.forEach(function (r) { kh += r.kh; done += r.done; visit += r.visit; pass += r.pass; perf += r.perf; n += r.n; });
+    var wRate = kh > 0 ? done / kh : null;
+
+    var dm = {};
+    items.forEach(function (h) {
+      filteredOf(h.data).stats.forEach(function (s) {
+        var key = s["事业部"] + "|" + s["部门"];
+        if (!dm[key]) dm[key] = { bu: s["事业部"], dept: s["部门"], kh: 0, done: 0 };
+        dm[key].kh += s["考核人数"] || 0; dm[key].done += s["当天目标已完成"] || 0;
+      });
+    });
+    var deptRows = Object.keys(dm).map(function (k) { var v = dm[k]; v.rate = v.kh > 0 ? v.done / v.kh : null; return v; })
+      .sort(function (a, b) { return (b.done || 0) - (a.done || 0); });
+
+    var cards = [
+      { l: "覆盖天数", v: rows.length, sub: fmtDate(days[0]) + " ~ " + fmtDate(days[days.length - 1]), c: "var(--kpi0)" },
+      { l: "合计考核人次", v: kh.toLocaleString(), sub: rows.length + " 天累计", c: "var(--kpi1)" },
+      { l: "累计已完成", v: done.toLocaleString(), sub: "加权完成率 " + (wRate != null ? (wRate * 100).toFixed(1) + "%" : "--"), c: "var(--kpi2)" },
+      { l: "累计见客", v: visit.toLocaleString(), sub: "人均 " + (n > 0 ? (visit / n).toFixed(1) : "--"), c: "var(--kpi3)" },
+      { l: "累计达标人次", v: pass, sub: "全员累计 " + n + " 人次", c: "var(--kpi4)" },
+      { l: "累计法律业绩", v: "¥" + perf.toLocaleString(), c: "var(--kpi5)" }
+    ];
+    var html = renderAnalysis(rows, days, wRate, deptRows, visit, pass, perf) +
+      '<div class="kpi-grid" style="margin-top:2px">' + cards.map(function (c) {
+      return '<div class="kpi-card" style="border-left-color:' + c.c + '"><div class="kpi-label">' + c.l + '</div><div class="kpi-val" style="color:' + c.c + ';font-size:22px">' + c.v + '</div><div class="kpi-sub">' + c.sub + '</div></div>';
+    }).join("") + '</div>';
+
+    html += '<div class="section"><h2>📅 每日明细（' + rows.length + ' 天，倒序）</h2><div class="tbl-wrap" style="max-height:340px"><table><thead><tr>' +
+      '<th>日期</th><th>考核人数</th><th>已完成</th><th>完成率</th><th>全员</th><th>达标</th><th>见客合计</th><th>法律业绩</th></tr></thead><tbody>';
+    rows.slice().reverse().forEach(function (r) {
+      html += '<tr><td><b>' + fmtDate(r.date) + '</b></td><td>' + r.kh.toLocaleString() + '</td><td>' + r.done.toLocaleString() + '</td>' +
+        '<td>' + (r.rate != null ? '<span class="rate-bar" style="width:' + Math.min(r.rate * 120, 120) + 'px;background:' + rateColor(r.rate) + '"></span>' + (r.rate * 100).toFixed(1) + '%' : '--') + '</td>' +
+        '<td>' + r.n + '</td><td>' + r.pass + '</td><td>' + r.visit.toLocaleString() + '</td><td>¥' + (r.perf || 0).toLocaleString() + '</td></tr>';
+    });
+    html += '</tbody></table></div></div>';
+
+    html += '<div class="section"><h2>🏢 按部门汇总（' + rows.length + ' 天累计）</h2><div class="tbl-wrap" style="max-height:300px"><table><thead><tr>' +
+      '<th>事业部</th><th>部门</th><th>考核人次</th><th>累计完成</th><th>加权完成率</th></tr></thead><tbody>';
+    deptRows.forEach(function (v) {
+      html += '<tr><td>' + v.bu + '</td><td>' + v.dept + '</td><td>' + v.kh.toLocaleString() + '</td><td>' + v.done.toLocaleString() + '</td>' +
+        '<td>' + (v.rate != null ? '<span class="rate-bar" style="width:' + Math.min(v.rate * 120, 120) + 'px;background:' + rateColor(v.rate) + '"></span>' + (v.rate * 100).toFixed(1) + '%' : '--') + '</td></tr>';
+    });
+    html += '</tbody></table></div></div>';
+
+    html += '<div class="section"><h2>📈 完成率 / 达标人次 趋势</h2><div class="chart-card"><div class="ch" id="hist-trend" style="height:300px"></div></div></div>';
+
+    $("hist-summary").innerHTML = html;
+    $("hist-summary").style.display = "block";
+    renderTrend(rows);
+  }
+
+  function hideSummary() {
+    $("hist-summary").style.display = "none"; $("hist-summary").innerHTML = "";
+    if (trendChart) { trendChart.dispose(); trendChart = null; }
+  }
+  function showBanner(txt) { var b = $("hist-banner"); b.style.display = txt ? "block" : "none"; b.textContent = txt; }
+
+  /* 核心：按当前选择决定展示模式 */
+  function apply() {
+    var days = selDays();
+    if (!days.length) {
+      showBanner(""); hideSummary();
+      setRAW(latestRAW || window.RAW);
+      baseRender();
+      return;
+    }
+    if (days.length === 1) {
+      var hit = findDate(days[0]);
+      if (hit) {
+        setRAW(hit.data);
+        showBanner("正在查看 " + fmtDate(days[0]) + " 当天数据（数据时间 " + ((hit.data.meta && hit.data.meta.data_time) || "") + "）— 多选其他天数可看汇总，点「清除」回到最新");
+        hideSummary();
+      }
+      baseRender();
+      return;
+    }
+    setRAW(latestRAW || window.RAW);
+    showBanner("正在查看 " + days.length + " 天历史汇总（" + fmtDate(days[0]) + " ~ " + fmtDate(days[days.length - 1]) + "）— 单选一天可看当天完整看板，点「清除」回到最新");
+    renderHistSummary();
+    baseRender();
+  }
+
+  /* 接管 fetchData 与 renderAll：历史模式下应用覆盖数据，实时数据始终备份 */
+  var baseFetch = window.fetchData;
+  if (typeof baseFetch === "function") {
+    window.fetchData = function (cb) {
+      baseFetch(function () {
+        latestRAW = window.RAW;   // 实时数据备份（历史覆盖由 renderAll 之后应用）
+        if (cb) cb();
+      });
+    };
+  }
+  var baseRender = window.renderAll;
+  if (typeof baseRender === "function") {
+    window.renderAll = function () {
+      if (histActive && selDays().length) apply();
+      else baseRender();
+    };
+  }
+
+  function initUI() {
+    $("btn-hist").addEventListener("click", toggleHist);
+    $("sel-month").addEventListener("change", function () { selMonth = this.value; renderDays(); });
+    $("hist-all").addEventListener("click", histAll);
+    $("hist-clear").addEventListener("click", histClear);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initUI);
+  else initUI();
+})();
+</script>
+
+<!-- MiniQA:start -->
+<script>
+/* ============================================================
+ * MiniQA —— 数据问答助手（AI 开放问答 + 全工作空间数据注入）
+ *  - 每个页面自动 fetch 同源 workspace_data.json（活动量+三力+人员+录音质检）
+ *    作为 AI 回答背景；加载失败回退到页面内联数据。
+ *  - 支持多轮对话（记住上下文）与流式生成（"思考"过程可见）。
+ *  - 优先走服务端代理 SPARK_PROXY_URL 调用讯飞星火（密钥仅存于代理侧，不留前端）；
+ *    代理未配置时回退到浏览器直连（仅过渡用，代理上线后应删除回退）。
+ * ============================================================ */
+(function () {
+  "use strict";
+
+  /* ---------- 服务端代理地址（部署 Cloudflare Worker 后填入） ---------- */
+  /* 例：https://spark-proxy-xxxx.workers.dev  —— 密钥只在 Worker 侧，前端不再明文 */
+  var SPARK_PROXY_URL = "";
+
+  /* ---------- 直连降级配置（仅当 SPARK_PROXY_URL 为空时启用；代理上线后删除） ---------- */
+  var SPARK = {
+    appid: "735e0119",
+    apiKey: "a0628d70545044f5bd0b00c9b49fa8a3",
+    apiSecret = <REDACTED>
+    host: "spark-api.xf-yun.com",
+    maxTokens: 1024,
+    temperature: 0.4,
+    models: [
+      { name: "Spark Lite", path: "/v1.1/chat", domain: "lite" },
+      { name: "Spark Max", path: "/v3.5/chat", domain: "generalv3.5" }
+    ]
+  };
+
+  /* ---------- 数据读取（兼容 const 词法全局与 window 全局） ---------- */
+  function getRaw() {
+    try { if (typeof RAW !== "undefined" && RAW && RAW.total) return RAW; } catch (e) {}
+    try { if (window.RAW && window.RAW.total) return window.RAW; } catch (e) {}
+    return null;
+  }
+  function getDat() {
+    try { if (typeof DATA !== "undefined" && DATA && DATA.agentSummary) return DATA; } catch (e) {}
+    try { if (window.DATA && window.DATA.agentSummary) return window.DATA; } catch (e) {}
+    return null;
+  }
+  function fmt(n) { return Math.round(Number(n) * 100) / 100; }
+  function pct(n) { return (Math.round(Number(n) * 10) / 10) + "%"; }
+  function pctf(n) { return pct(Number(n) * 100); }
+
+  /* ---------- 统一数据背景：优先 fetch 同源 workspace_data.json ---------- */
+  function buildContext() {
+    return new Promise(function (resolve) {
+      var fallback = function () {
+        var raw = getRaw(), dat = getDat();
+        if (raw && raw.total) return Promise.resolve(buildActivityText(raw));
+        if (dat && dat.agentSummary) return Promise.resolve(buildCallText(dat));
+        return Promise.resolve("");
+      };
+      if (typeof fetch !== "function") { return resolve(fallback()); }
+      fetch("./workspace_data.json", { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http " + r.status)); })
+        .then(function (d) {
+          var t = (d && d.context_text) || "";
+          if (t && t.length > 30) resolve(t); else resolve(fallback());
+        })
+        .catch(function () { resolve(fallback()); });
+    });
+  }
+  function buildActivityText(d) {
+    var t = d.total || [], s = d.stats || [], meta = d.meta || {};
+    var n = t.filter(function (x) { return x["是否达标"] === "达标"; }).length;
+    var lines = ["【某公司活动量看板】数据时间：" + (meta.data_time || "未知")];
+    lines.push("考核总人数" + fmt(sumN(s, "总人数")) + "人，" + s.length + "个部门；全员明细" + t.length + "人，完成率均值" + pctf(avgN(t, "完成率")) + "，达标" + n + "人（达标率" + pct(t.length ? n / t.length * 100 : 0) + "）");
+    lines.push("见客合计" + fmt(sumN(t, "见客合计")) + "次，上门" + fmt(sumN(t, "当日上门量")) + "，外出" + fmt(sumN(t, "当日外出量")));
+    return lines.join("\n");
+  }
+  function buildCallText(d) {
+    var k = d.kpi || {}, rs = d.recStat || {}, ags = d.agentSummary || [], recs = d.recordings || [];
+    var lines = ["【某公司销售通话录音质检报告】数据日期：" + ((d.meta && d.meta.date) || "未知")];
+    lines.push("当日拨打" + fmt(k.call_total) + "通，接通" + fmt(k.connect_total) + "通（接通率" + pct((k.connect_rate || 0) * 100) + "），90天加微" + fmt(k.wechat_total) + "，月累计业绩¥" + fmt(k.profit_total));
+    lines.push("录音库" + rs.total + "段，已转写质检" + recs.filter(function (r) { return r.transcribed; }).length + "段（≥10秒）");
+    var sorted = ags.slice().sort(function (a, b) { return b.overall - a.overall; });
+    if (sorted.length) lines.push("电邀规划师综合分：" + sorted.map(function (a) { return a.person + " " + fmt(a.overall) + "/5(样本" + a.count + ")"; }).join("、"));
+    return lines.join("\n");
+  }
+  function sumN(a, k) { return (a || []).reduce(function (s, x) { return s + (Number(x[k]) || 0); }, 0); }
+  function avgN(a, k) {
+    var v = (a || []).map(function (x) { return Number(x[k]) || 0; }).filter(function (x) { return !isNaN(x); });
+    return v.length ? v.reduce(function (p, c) { return p + c; }, 0) / v.length : 0;
+  }
+
+  /* ---------- 多轮对话上下文 ---------- */
+  var conversation = []; // [{role:'user'|'assistant', content:'...'}]
+  var MAX_HISTORY = 12;
+  function pushTurn(role, content) {
+    conversation.push({ role: role, content: content });
+    if (conversation.length > MAX_HISTORY) conversation = conversation.slice(conversation.length - MAX_HISTORY);
+  }
+
+  /* ---------- 调星火：优先走代理（流式），否则浏览器直连 ---------- */
+  function askLLM(question, context, onToken, onDone, onError) {
+    if (SPARK_PROXY_URL && SPARK_PROXY_URL.length > 4) {
+      return askViaProxy(question, context, onToken, onDone, onError);
+    }
+    return askDirect(question, context, onToken, onDone, onError);
+  }
+
+  /* ----- 服务端代理（密钥不出现在前端） ----- */
+  function askViaProxy(question, context, onToken, onDone, onError) {
+    var payload = {
+      context: context || "",
+      history: conversation.slice(0, -1), // 不含当前这轮 user
+      question: question
+    };
+    fetch(SPARK_PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function (resp) {
+      if (!resp.ok) { throw new Error("代理返回 " + resp.status); }
+      if (!resp.body || !resp.body.getReader) { return resp.text().then(function (t) { onToken(t); onDone(); }); }
+      var reader = resp.body.getReader();
+      var decoder = new TextDecoder("utf-8");
+      function pump() {
+        return reader.read().then(function (r) {
+          if (r.done) { onDone(); return; }
+          onToken(decoder.decode(r.value, { stream: true }));
+          return pump();
+        });
+      }
+      return pump();
+    }).catch(function (e) { onError(e); });
+  }
+
+  /* ----- 浏览器直连降级（过渡用，含密钥） ----- */
+  function b64(buf) {
+    var s = "";
+    for (var i = 0; i < buf.length; i++) s += String.fromCharCode(buf[i]);
+    return btoa(s);
+  }
+  function hmacSha256Base64(secret, message) {
+    var enc = new TextEncoder();
+    return crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"])
+      .then(function (key) { return crypto.subtle.sign("HMAC", key, enc.encode(message)); })
+      .then(function (sig) { return b64(new Uint8Array(sig)); });
+  }
+  function sparkUrl(model) {
+    var date = new Date().toUTCString();
+    var signatureOrigin = "host: " + SPARK.host + "\ndate: " + date + "\nGET " + model.path + " HTTP/1.1";
+    return hmacSha256Base64(SPARK.apiSecret, signatureOrigin).then(function (signature) {
+      var authorizationOrigin = 'api_key="' + SPARK.apiKey + '", algorithm="hmac-sha256", headers="host date request-line", signature="' + signature + '"';
+      var authorization = btoa(authorizationOrigin);
+      return "wss://" + SPARK.host + model.path + "?authorization=" + encodeURIComponent(authorization) + "&date=" + encodeURIComponent(date) + "&host=" + encodeURIComponent(SPARK.host);
+    });
+  }
+  function askDirect(question, context, onToken, onDone, onError) {
+    var models = SPARK.models || [];
+    var systemMsg = "你是「小析」，某公司业务数据助手。请用简体中文、分点简洁回答，优先引用【数据背景】中的真实数字，不要编造。最多200字。\n【数据背景】\n" + context;
+    var messages = [{ role: "user", content: systemMsg + "\n【用户问题】\n" + question }];
+    // 直连降级仅支持单轮（上下文已在 system 内）
+    var tryOne = function (idx) {
+      if (idx >= models.length) { onError(new Error("所有模型均不可用")); return; }
+      var model = models[idx];
+      sparkUrl(model).then(function (url) {
+        var ws = new WebSocket(url);
+        var done = false, failed = false, full = "";
+        var timer = setTimeout(function () { if (!done) { done = true; try { ws.close(); } catch (e) {} tryOne(idx + 1); } }, 25000);
+        ws.onopen = function () {
+          ws.send(JSON.stringify({
+            header: { app_id: SPARK.appid, uid: "miniqa" },
+            parameter: { chat: { domain: model.domain, temperature: SPARK.temperature, max_tokens: SPARK.maxTokens } },
+            payload: { message: { text: [{ role: "user", content: systemMsg }, { role: "user", content: question }] } }
+          }));
+        };
+        ws.onmessage = function (ev) {
+          var d; try { d = JSON.parse(ev.data); } catch (e) { return; }
+          if (d.header && d.header.code !== 0) {
+            if (!done) { done = true; clearTimeout(timer); failed = true; try { ws.close(); } catch (e) {} tryOne(idx + 1); }
+            return;
+          }
+          var t = (d.payload && d.payload.choices && d.payload.choices.text) || [];
+          t.forEach(function (x) { if (x && x.content) { full += x.content; onToken(x.content); } });
+          if (d.header && d.header.status === 2) { if (!done) { done = true; clearTimeout(timer); onDone(); } }
+        };
+        ws.onerror = function () { if (!done && !failed) { done = true; clearTimeout(timer); tryOne(idx + 1); } };
+      }).catch(function () { if (!done) { done = true; tryOne(idx + 1); } });
+    };
+    tryOne(0);
+  }
+
+  /* ============================================================
+   * UI 渲染（自注入样式 + DOM + 对话流）
+   * ============================================================ */
+  function injectStyle() {
+    var css = [
+      "#qaFab{position:fixed;right:20px;bottom:20px;z-index:99999;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;",
+      "  background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:24px;box-shadow:0 6px 18px rgba(79,70,229,.45);transition:transform .15s}",
+      "#qaFab:hover{transform:scale(1.08)}",
+      "#qaWidget{position:fixed;right:20px;bottom:84px;z-index:99999;width:380px;max-width:calc(100vw - 40px);height:520px;max-height:calc(100vh - 110px);",
+      "  background:var(--card,#fff);color:var(--text,#1a1a2e);border:1px solid var(--border,#e5e7eb);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.22);",
+      "  display:flex;flex-direction:column;overflow:hidden;font-family:var(--font,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif)}",
+      "#qaWidget.qa-hidden{display:none}",
+      "#qaHeader{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:700;font-size:15px}",
+      "#qaClose{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1}",
+      "#qaClear{background:none;border:1px solid rgba(255,255,255,.5);color:#fff;font-size:11px;padding:2px 8px;border-radius:8px;cursor:pointer;margin-right:6px}",
+      "#qaBadge{font-size:10px;background:rgba(255,255,255,.22);padding:2px 7px;border-radius:8px;margin-left:6px;font-weight:600}",
+      "#qaBody{flex:1;overflow-y:auto;padding:12px;font-size:13.5px;line-height:1.6}",
+      "#qaBody .qa-msg{margin-bottom:10px;padding:9px 12px;border-radius:10px;white-space:pre-wrap;word-break:break-word}",
+      "#qaBody .qa-bot{background:var(--bg,#f4f6f9);color:var(--text,#1a1a2e)}",
+      "#qaBody .qa-user{background:#4f46e5;color:#fff;margin-left:36px}",
+      "#qaBody .qa-thinking{color:#7c3aed;font-style:italic}",
+      "#qaBody .qa-cursor::after{content:'▋';animation:qablink 1s steps(2) infinite;color:#7c3aed}",
+      "@keyframes qablink{0%,50%{opacity:1}51%,100%{opacity:0}}",
+      "#qaChips{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 8px}",
+      "#qaChips .qa-chip{font-size:12px;padding:5px 10px;border:1px solid var(--border,#e5e7eb);border-radius:14px;background:var(--bg,#f4f6f9);color:var(--muted,#6b7280);cursor:pointer}",
+      "#qaChips .qa-chip:hover{border-color:#4f46e5;color:#4f46e5}",
+      "#qaInputBar{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border,#e5e7eb)}",
+      "#qaInput{flex:1;padding:9px 12px;border:1px solid var(--border,#e5e7eb);border-radius:9px;font-size:13.5px;outline:none;background:var(--bg,#f4f6f9);color:var(--text,#1a1a2e)}",
+      "#qaInput:focus{border-color:#4f46e5}",
+      "#qaSend{padding:0 16px;border:none;border-radius:9px;background:#4f46e5;color:#fff;font-weight:600;cursor:pointer;font-size:13.5px}",
+      "#qaSend:hover{background:#4338ca}"
+    ].join("\n");
+    var st = document.createElement("style");
+    st.textContent = css;
+    document.head.appendChild(st);
+  }
+  function buildUI() {
+    injectStyle();
+    var fab = document.createElement("button");
+    fab.id = "qaFab"; fab.textContent = "💬"; fab.title = "数据助手";
+    var box = document.createElement("div");
+    box.id = "qaWidget"; box.className = "qa-hidden";
+    var chips = ["整体达标情况", "三力有效人力", "人员业绩概况", "哪位电邀规划师最好", "录音质检硬伤", "公司整体建议"];
+    box.innerHTML =
+      '<div id="qaHeader"><span>📊 数据助手 · 小析<span id="qaBadge">AI</span></span>' +
+      '<span><button id="qaClear" title="清空对话上下文">清空</button><button id="qaClose">×</button></span></div>' +
+      '<div id="qaBody"></div>' +
+      '<div id="qaChips">' + chips.map(function (c) { return '<span class="qa-chip">' + c + "</span>"; }).join("") + "</div>" +
+      '<div id="qaInputBar"><input id="qaInput" placeholder="问任意数据问题，如「公司整体情况？」" /><button id="qaSend">发送</button></div>';
+    document.body.appendChild(fab);
+    document.body.appendChild(box);
+    var body = box.querySelector("#qaBody");
+    body.appendChild(msg("bot", "你好，我是数据助手「小析」🤖\n我已掌握工作空间全部看板数据（活动量 / 员工三力 / 人员分析 / 通话录音质检），可连续对话、记得上下文。用自然语言问我即可，例如「整体达标情况？」「哪位电邀规划师最需要改进？」「公司整体建议？」。"));
+
+    function msg(role, text, extraCls) {
+      var d = document.createElement("div");
+      d.className = "qa-msg " + (role === "user" ? "qa-user" : "qa-bot") + (extraCls ? " " + extraCls : "");
+      d.textContent = text;
+      return d;
+    }
+    var busy = false;
+    function send(q) {
+      q = (q || "").trim();
+      if (!q || busy) return;
+      busy = true;
+      body.appendChild(msg("user", q));
+      pushTurn("user", q);
+      // 思考过程：两步可见
+      var think = msg("bot", "📚 正在结合全部看板数据…", "qa-thinking qa-cursor");
+      body.appendChild(think);
+      body.scrollTop = body.scrollHeight;
+      buildContext().then(function (ctx) {
+        if (!ctx) {
+          think.textContent = "⚠️ 当前页面工作空间数据尚未加载，请稍候刷新后再试。";
+          think.classList.remove("qa-thinking", "qa-cursor");
+          busy = false; return;
+        }
+        think.textContent = "🧠 小析正在分析…";
+        // 流式：首字到达后进入"生成中"光标态
+        var started = false;
+        askLLM(q, ctx,
+          function (token) {
+            if (!started) { started = true; think.textContent = ""; think.classList.remove("qa-thinking"); think.classList.add("qa-cursor"); }
+            think.textContent += token;
+            body.scrollTop = body.scrollHeight;
+          },
+          function () {
+            think.classList.remove("qa-cursor");
+            pushTurn("assistant", think.textContent);
+            busy = false;
+          },
+          function (e) {
+            think.textContent = "⚠️ AI 服务暂不可用：" + (e && e.message ? e.message : e) +
+              "\n\n可稍后重试；若持续失败，可能是代理/接口额度或网络限制。";
+            think.classList.remove("qa-thinking", "qa-cursor");
+            busy = false;
+          });
+      }).catch(function () {
+        think.textContent = "⚠️ 数据背景加载失败，请刷新页面后重试。";
+        think.classList.remove("qa-thinking", "qa-cursor");
+        busy = false;
+      });
+    }
+    fab.addEventListener("click", function () { box.classList.toggle("qa-hidden"); });
+    box.querySelector("#qaClose").addEventListener("click", function () { box.classList.add("qa-hidden"); });
+    box.querySelector("#qaClear").addEventListener("click", function () {
+      conversation = [];
+      body.innerHTML = "";
+      body.appendChild(msg("bot", "🧹 已清空对话上下文，新话题开始。"));
+    });
+    box.querySelector("#qaSend").addEventListener("click", function () { send(box.querySelector("#qaInput").value); box.querySelector("#qaInput").value = ""; });
+    box.querySelector("#qaInput").addEventListener("keydown", function (e) { if (e.key === "Enter") { send(this.value); this.value = ""; } });
+    Array.prototype.forEach.call(box.querySelectorAll(".qa-chip"), function (c) {
+      c.addEventListener("click", function () { send(c.textContent); });
+    });
+  }
+
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", buildUI);
+    } else {
+      buildUI();
+    }
+  }
+  if (typeof globalThis !== "undefined") {
+    globalThis.MiniQA = { askLLM: askLLM, buildContext: buildContext, version: "3.0" };
+  }
+})();
+
+</script>
+<!-- MiniQA:end -->
+
+<script>
+/* ---- 实时时钟 / 刷新倒计时 / 同步于x秒前（注入） ---- */
+(function(){
+  var CD={last:Date.now()};
+  function pad(n){return (n<10?'0':'')+n;}
+  function hms(d){return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());}
+  function hook(){
+    if(window.fetch){
+      var f=window.fetch;
+      window.fetch=function(){
+        var r=f.apply(this,arguments);
+        try{ r && r.then && r.then(function(){CD.last=Date.now();}); }catch(e){}
+        return r;
+      };
+    }
+    if(window.XMLHttpRequest){
+      var O=XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open=function(){
+        try{ this.addEventListener('load',function(){CD.last=Date.now();}); }catch(e){}
+        return O.apply(this,arguments);
+      };
+    }
+  }
+  function ivSec(){
+    var s=document.getElementById('sel-interval');
+    var v=s?parseInt(s.value,10):0;
+    return v>0?v:0;
+  }
+  function relTxt(ts){
+    var s=Math.max(0,Math.round((Date.now()-ts)/1000));
+    if(s<60) return s+' 秒前同步';
+    var m=Math.floor(s/60);
+    if(m<60) return m+' 分钟前同步';
+    return Math.floor(m/60)+' 小时前同步';
+  }
+  function tick(){
+    var el,iv;
+    if((el=document.getElementById('live-clock'))) el.textContent=hms(new Date());
+    iv=ivSec();
+    if((el=document.getElementById('cd-live'))){
+      el.textContent = iv ? Math.max(0,Math.ceil((CD.last+iv*1000-Date.now())/1000)) : '—';
+    }
+    if((el=document.getElementById('live-rel'))) el.textContent=relTxt(CD.last);
+    if((el=document.getElementById('live-dt'))){
+      el.textContent = hms(new Date(CD.last));
+    }
+  }
+  hook(); tick(); setInterval(tick,1000);
+})();
+</script>
+
+<style id="visitlog-style">
+#vlBtn{position:fixed;top:8px;left:8px;z-index:99998;cursor:pointer;font-size:12px;line-height:1;
+padding:6px 10px;border-radius:999px;border:1px solid #c7d0dc;background:rgba(255,255,255,.82);
+color:#3c4a5c;box-shadow:0 1px 4px rgba(30,45,70,.12);user-select:none;transition:.15s;font-family:inherit}
+#vlBtn:hover{background:#fff;border-color:#5b7396;color:#31415a;box-shadow:0 2px 8px rgba(30,45,70,.2)}
+#vlMask{position:fixed;inset:0;z-index:99999;display:none;background:rgba(24,34,52,.45);
+align-items:flex-start;justify-content:center;padding:5vh 16px;font-family:inherit}
+#vlPanel{background:#fff;border-radius:10px;box-shadow:0 12px 48px rgba(10,20,40,.35);
+width:min(860px,100%);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;
+border:1px solid #dfe5ee}
+#vlHead{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;
+background:#f2f5f9;border-bottom:1px solid #e3e8ef;color:#2c3a4e;font-size:15px}
+#vlClose{cursor:pointer;font-size:16px;padding:2px 8px;border-radius:6px;color:#6b7890}
+#vlClose:hover{background:#e3e8ef;color:#2c3a4e}
+#vlBar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;border-bottom:1px solid #eef1f6;font-size:13px;color:#3c4a5c}
+#vlBar input[type=date]{border:1px solid #c7d0dc;border-radius:6px;padding:4px 8px;font-size:13px;color:#2c3a4e}
+#vlBar button{border:1px solid #c7d0dc;background:#fff;border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer;color:#3c4a5c}
+#vlBar button:hover{border-color:#5b7396;color:#31415a}
+#vlBar button.vl-primary{background:#5b7396;border-color:#5b7396;color:#fff}
+#vlBar button.vl-primary:hover{background:#4a6284}
+#vlBody{overflow:auto;padding:12px 16px 16px;font-size:13px;color:#33415a}
+#vlLoading{padding:30px 0;text-align:center;color:#8a94a6}
+.vl-sum{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.vl-sum .vl-kpi{flex:1;min-width:140px;background:#f6f8fb;border:1px solid #e3e8ef;border-radius:8px;padding:10px 14px}
+.vl-kpi .vl-k{font-size:12px;color:#7b8698}
+.vl-kpi .vl-v{font-size:22px;font-weight:700;color:#31415a;margin-top:2px}
+.vl-sec{font-weight:700;color:#2c3a4e;margin:14px 0 6px;font-size:13px}
+.vl-sec:first-of-type{margin-top:0}
+table.vl-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.vl-tbl th,.vl-tbl td{border:1px solid #e3e8ef;padding:5px 9px;text-align:left;white-space:nowrap}
+.vl-tbl th{background:#eef2f7;color:#43536e;font-weight:600}
+.vl-tbl tr:nth-child(even) td{background:#f8fafc}
+.vl-tbl td.vl-num{text-align:right;font-variant-numeric:tabular-nums}
+.vl-bar-cell{height:8px;border-radius:4px;background:#5b7396;display:inline-block;vertical-align:middle}
+#vlErr{color:#b05a52;background:#faf1f0;border:1px solid #e8c8c5;border-radius:8px;padding:10px 14px}
+</style>
+<div id="vlBtn" title="查看看板访问记录">📋 访问记录</div>
+<div id="vlMask">
+  <div id="vlPanel">
+    <div id="vlHead"><span>📋 访问记录</span><span id="vlClose">✕</span></div>
+    <div id="vlBar">
+      <span>日期区间</span>
+      <input type="date" id="vlStart"> <span>至</span> <input type="date" id="vlEnd">
+      <button id="vlGo" class="vl-primary">查询</button>
+      <button id="vlToday">今日</button>
+      <button id="vl7">近7天</button>
+      <button id="vl30">近30天</button>
+      <span id="vlMsg" style="color:#8a94a6;margin-left:auto"></span>
+    </div>
+    <div id="vlBody"><div id="vlLoading">加载中…</div></div>
+  </div>
+</div>
+<script id="visitlog-inject">
+(function(){
+  var API='https://hzdash-d6gn9drv3691d93a1.service.tcloudbase.com/visit';
+  var KEY='hz-vis-2026';
+  var PAGE=(location.pathname||'/')+(location.search||'');
+  /* 页面加载后错峰上报一次（fail-silent，不阻塞渲染） */
+  setTimeout(function(){
+    try{
+      fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({page:PAGE}),keepalive:true}).catch(function(){});
+    }catch(e){}
+  },Math.floor(Math.random()*600)+300);
+
+  function $(id){return document.getElementById(id)}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  var PAGE_NAMES={'/':'导航页','/dash/':'活动量看板','/dash/index.html':'活动量看板',
+    '/dash/sanli.html':'三力看板','/dash/ry.html':'网销看板','/dash/ry_dy.html':'电邀看板',
+    '/dash/ry_kuaiji.html':'会计看板','/index.html':'活动量看板','/sanli.html':'三力看板',
+    '/ry.html':'网销看板'};
+  function pageName(p){p=String(p||'');var q=p.indexOf('?');if(q>=0)p=p.slice(0,q);
+    return PAGE_NAMES[p]||p;}
+  function fmtDate(d){var p=function(n){return n<10?'0'+n:''+n};
+    return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+  function today(){return fmtDate(new Date())}
+  function daysAgo(n){var d=new Date();d.setDate(d.getDate()-n);return fmtDate(d)}
+  function pp(v,max){if(!max)max=v;var w=Math.max(2,Math.round(v/max*64));
+    return '<span class="vl-bar-cell" style="width:'+w+'px"></span>';}
+
+  function load(start,end){
+    $('vlBody').innerHTML='<div id="vlLoading">加载中…</div>';
+    $('vlMsg').textContent='';
+    fetch(API+'?start='+start+'&end='+end+'&key='+encodeURIComponent(KEY))
+      .then(function(r){return r.json()})
+      .then(function(j){
+        if(!j||!j.ok){throw new Error((j&&j.error)||'查询失败');}
+        render(start,end,j);
+      })
+      .catch(function(e){
+        $('vlBody').innerHTML='<div id="vlErr">查询失败：'+esc(e.message||e)+'</div>';
+      });
+  }
+  function render(start,end,j){
+    var h='';
+    h+='<div class="vl-sum">'
+      +'<div class="vl-kpi"><div class="vl-k">'+(start===end?'今日':'区间')+'访问次数（PV）</div><div class="vl-v">'+j.total.pv+'</div></div>'
+      +'<div class="vl-kpi"><div class="vl-k">独立 IP 数（UV）</div><div class="vl-v">'+j.total.ip+'</div></div>'
+      +'<div class="vl-kpi"><div class="vl-k">统计区间</div><div class="vl-v" style="font-size:14px;line-height:2">'+start+' ~ '+end+'</div></div>'
+      +'</div>';
+    var i,maxPv;
+    h+='<div class="vl-sec">🗺️ 区域分布（按访问次数）</div>';
+    if(j.regions.length){
+      maxPv=j.regions[0].pv;
+      h+='<table class="vl-tbl"><tr><th>#</th><th>IP 区域</th><th>访问次数</th><th></th><th>独立 IP</th></tr>';
+      for(i=0;i<j.regions.length;i++){
+        h+='<tr><td>'+(i+1)+'</td><td>'+esc(j.regions[i].k)+'</td>'
+          +'<td class="vl-num">'+j.regions[i].pv+'</td><td>'+pp(j.regions[i].pv,maxPv)+'</td>'
+          +'<td class="vl-num">'+j.regions[i].ip+'</td></tr>';
+      }
+      h+='</table>';
+    }else{h+='<div style="color:#8a94a6">该区间暂无访问记录</div>';}
+    if(j.days.length){
+      h+='<div class="vl-sec">📅 按日汇总</div>';
+      maxPv=Math.max.apply(null,j.days.map(function(d){return d.pv}));
+      h+='<table class="vl-tbl"><tr><th>日期</th><th>访问次数</th><th></th><th>独立 IP</th></tr>';
+      for(i=0;i<j.days.length;i++){
+        h+='<tr><td>'+esc(j.days[i].k)+'</td><td class="vl-num">'+j.days[i].pv+'</td>'
+          +'<td>'+pp(j.days[i].pv,maxPv)+'</td><td class="vl-num">'+j.days[i].ip+'</td></tr>';
+      }
+      h+='</table>';
+    }
+    if(j.list.length){
+      h+='<div class="vl-sec">🕓 最近访问明细（最多 300 条）</div>';
+      h+='<table class="vl-tbl"><tr><th>时间</th><th>IP</th><th>区域</th><th>页面</th></tr>';
+      for(i=0;i<j.list.length;i++){
+        var it=j.list[i];
+        h+='<tr><td>'+esc(it.date)+' '+esc(it.time)+'</td><td>'+esc(it.ip)+'</td>'
+          +'<td>'+esc(it.region)+'</td><td>'+esc(pageName(it.page))+'</td></tr>';
+      }
+      h+='</table>';
+    }
+    $('vlBody').innerHTML=h;
+    $('vlMsg').textContent='共 '+j.total.pv+' 次 · '+j.total.ip+' 个 IP';
+  }
+
+  function openPanel(){
+    $('vlMask').style.display='flex';
+    $('vlStart').value=today();
+    $('vlEnd').value=today();
+    load(today(),today());
+  }
+  function closePanel(){$('vlMask').style.display='none';}
+
+  $('vlBtn').addEventListener('click',openPanel);
+  $('vlClose').addEventListener('click',closePanel);
+  $('vlMask').addEventListener('click',function(e){if(e.target===$('vlMask'))closePanel();});
+  $('vlGo').addEventListener('click',function(){
+    var s=$('vlStart').value,e=$('vlEnd').value;
+    if(!s||!e||s>e){$('vlMsg').textContent='请选择有效日期区间';return;}
+    load(s,e);
+  });
+  $('vlToday').addEventListener('click',function(){
+    $('vlStart').value=today();$('vlEnd').value=today();load(today(),today());});
+  $('vl7').addEventListener('click',function(){
+    $('vlStart').value=daysAgo(6);$('vlEnd').value=today();load($('vlStart').value,today());});
+  $('vl30').addEventListener('click',function(){
+    $('vlStart').value=daysAgo(29);$('vlEnd').value=today();load($('vlStart').value,today());});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closePanel();});
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>某公司员工三力 · 数据看板</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--accent:#4f46e5;--accent2:#6366f1;--green:#16a34a;--red:#dc2626;--amber:#f59e0b;--blue:#2563eb;--shadow:0 1px 3px rgba(0,0,0,.08);--radius:10px;--font:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;--kpi0:#4f46e5;--kpi1:#0891b2;--kpi2:#16a34a;--kpi3:#f59e0b;--kpi4:#dc2626;--kpi5:#7c3aed;--kpi6:#db2777;--kpi7:#0d9488}
+.dark{--bg:#0f172a;--card:#1e293b;--text:#e2e8f0;--muted:#94a3b8;--border:#334155;--shadow:0 1px 3px rgba(0,0,0,.3)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
+.container{max-width:1500px;margin:0 auto;padding:12px 20px}
+
+/* board nav */
+.board-nav{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.board-nav a{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--muted);text-decoration:none;font-size:14px;font-weight:600;transition:all .15s}
+.board-nav a:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.board-nav a.act{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 6px rgba(79,70,229,.3)}
+
+/* header */
+header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:14px}
+header .title{font-size:22px;font-weight:800;display:flex;align-items:center;gap:8px}
+header .title .dot{width:9px;height:9px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+header .meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+header .meta span{white-space:nowrap}
+header .meta b{color:var(--text)}
+.btn{padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);cursor:pointer;font-size:13px;transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.sm{padding:4px 10px;font-size:12px}
+.btn.act{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* refresh bar */
+.refresh-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.refresh-bar select{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px}
+.countdown{font-variant-numeric:tabular-nums;min-width:28px;text-align:center;font-weight:700;color:var(--accent)}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:14px}
+.kpi-card{background:var(--card);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);border-left:4px solid var(--accent);transition:transform .15s}
+.kpi-card:hover{transform:translateY(-2px)}
+.kpi-card .kpi-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+.kpi-card .kpi-val{font-size:26px;font-weight:800;line-height:1.1}
+.kpi-card .kpi-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* filters */
+.filter-bar{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow)}
+.filter-bar label{font-size:13px;color:var(--muted);white-space:nowrap}
+.filter-bar .chip-group{display:flex;flex-wrap:wrap;gap:5px}
+.filter-bar .chip{padding:3px 10px;border-radius:14px;border:1px solid var(--border);font-size:12px;cursor:pointer;transition:all .15s;background:var(--card);color:var(--text);white-space:nowrap}
+.filter-bar .chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.filter-bar select{padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--card);color:var(--text)}
+.filter-bar input[type=text]{padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--card);color:var(--text);width:160px}
+
+/* sections */
+.section{margin-bottom:16px}
+.section h2{font-size:16px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.section .sub{font-size:12px;color:var(--muted);font-weight:400;margin-left:8px}
+.chart-card{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+.chart-card .ch{width:100%;height:380px}
+
+/* tables */
+.tbl-wrap{max-height:560px;overflow:auto;border-radius:var(--radius);box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card)}
+thead{position:sticky;top:0;z-index:2}
+th{background:var(--accent);color:#fff;padding:8px 10px;cursor:pointer;text-align:left;white-space:nowrap;user-select:none;font-weight:600}
+th:hover{background:var(--accent2)}
+td{padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+tr:hover td{background:rgba(79,70,229,.04)}
+.badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;display:inline-block}
+.badge.pass{background:#dcfce7;color:#166534}
+.badge.fail{background:#fee2e2;color:#991b1b}
+.badge.skip{background:#f3f4f6;color:#6b7280}
+.badge.info{background:#dbeafe;color:#1e40af}
+.badge.warn{background:#fef3c7;color:#92400e}
+.dark .badge.pass{background:#14532d;color:#86efac}
+.dark .badge.fail{background:#7f1d1d;color:#fca5a5}
+.dark .badge.skip{background:#374151;color:#9ca3af}
+.dark .badge.info{background:#1e3a8a;color:#bfdbfe}
+.dark .badge.warn{background:#78350f;color:#fde68a}
+.fcell{font-size:12px;line-height:1.5}
+.fcell .std{color:var(--muted);font-size:11px}
+
+/* toast */
+.toast{position:fixed;top:20px;right:20px;z-index:9999;background:var(--accent);color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+
+@media print{header .dot{display:none}.refresh-bar{display:none}.filter-bar{display:none}.toast{display:none}body{background:#fff}.container{max-width:100%;padding:0}.chart-card{break-inside:avoid;box-shadow:none;border:1px solid #ddd}}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* ---- 实时时钟 / 刷新倒计时（注入） ---- */
+.live-wrap{display:inline-flex;align-items:center;gap:6px;margin-left:8px;font-size:12px;
+  color:var(--muted,#6b7280);font-variant-numeric:tabular-nums;white-space:nowrap;vertical-align:middle}
+.live-wrap b{font-weight:700;color:var(--fg,#1f2937);font-variant-numeric:tabular-nums}
+.live-sep{opacity:.4}
+.live-wrap .dot{width:6px;height:6px;border-radius:50%;background:#5e8a70;
+  display:inline-block;animation:hzpulse 1s infinite}
+@keyframes hzpulse{0%,100%{opacity:1}50%{opacity:.18}}
+
+</style>
+</head>
+<body>
+<div class="container">
+<nav class="board-nav">
+  <a href="index.html">📊 活动量看板</a>
+  <a href="sanli.html" class="act">🏆 员工三力看板</a>
+</nav>
+
+<header>
+  <div class="title">
+    <span class="dot" id="live-dot"></span>
+    某公司员工三力 · 在线数据看板
+  </div>
+  <div class="meta">
+    <span>数据截至 <b id="meta-dt">--</b></span>
+    <span>文件时间 <b id="meta-mt">--</b></span>
+    <span style="font-size:11px;color:var(--muted)" id="meta-status">加载中...</span>
+  </div>
+</header>
+
+<div class="refresh-bar">
+  <label>自动刷新</label>
+  <select id="sel-interval" onchange="setMyInterval()">
+<option value="10">10 秒</option>
+<option value="20" selected>20 秒</option>
+<option value="30">30 秒</option>
+<option value="60">60 秒</option>
+<option value="0">关闭</option>
+</select><span class="live-wrap"><span class="dot"></span><b id="live-clock">--:--:--</b><span class="live-sep">·</span><span>数据同步 <b id="live-dt">--:--:--</b></span><span class="live-sep">·</span><span id="live-rel">同步中…</span><span class="live-sep">·</span><span><b id="cd-live">--</b> 秒后刷新</span></span>
+  <span class="countdown" id="countdown">5</span>
+  <button class="btn sm" onclick="manualRefresh()">&#x21bb; 手动刷新</button>
+  <button class="btn sm" id="btn-theme" onclick="toggleTheme()">🌙 深色</button>
+  <button class="btn sm" onclick="exportCSV()">&#x2913; 导出 CSV</button>
+  <button class="btn sm" onclick="window.print()">&#x1f5a8; 打印</button>
+</div>
+
+<div class="kpi-grid" id="kpi-grid"></div>
+
+<div class="filter-bar" id="filter-bar">
+  <label>事业部:</label>
+  <div class="chip-group" id="chip-bu"></div>
+  <span style="color:var(--muted);font-size:12px;margin:0 4px">|</span>
+  <label>部门:</label>
+  <select id="sel-dept" onchange="applyFilter()"><option value="">全部部门</option></select>
+  <span style="color:var(--muted);font-size:12px;margin:0 4px">|</span>
+  <label>有效人力:</label>
+  <select id="sel-valid" onchange="applyFilter()">
+    <option value="">全部</option>
+    <option value="是">有效</option>
+    <option value="否">无效</option>
+    <option value="不考核">不考核</option>
+  </select>
+  <span style="color:var(--muted);font-size:12px;margin:0 4px">|</span>
+  <label>搜索:</label>
+  <input type="text" id="search-q" placeholder="搜索姓名 / 工号..." oninput="debounceSearch()">
+  <button class="btn sm" onclick="clearSearch()" style="margin-left:4px">✕ 清除</button>
+</div>
+
+<!-- 员工三力明细 -->
+<div class="section">
+  <h2>👥 员工三力明细<span id="total-count" style="font-size:13px;font-weight:400;color:var(--muted);margin-left:10px"></span></h2>
+  <div class="tbl-wrap"><table id="tbl-sanli"></table></div>
+</div>
+
+<!-- 各事业部三力等级人数 组合图 -->
+<div class="section">
+  <h2>📊 各事业部三力等级人数<span class="sub">组合图 · 蓝=破零人力 · 黄=标准人力 · 橙=英雄人力 · 灰=无效人力</span></h2>
+  <div class="chart-card"><div class="ch" id="c_combo"></div></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/static/echarts.min.js"></script>
+<script>
+(function(){if(typeof echarts==='undefined'){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js';document.head.appendChild(s)}})();
+
+var EMBEDDED_DATA=null;
+(function(){var el=document.getElementById('embedded-data');if(el){try{EMBEDDED_DATA=JSON.parse(el.textContent)}catch(e){}}})();
+
+/* R39（2026-09-23）：LIVE_URL 必须在主脚本块内声明。
+   原先只声明在页尾「历史时间选择器」块，而主块 fetchData() 先于该块执行
+   ⇒ ReferenceError: LIVE_URL is not defined ⇒ 主块中断 ⇒ 自动刷新永不启动。 */
+var LIVE_URL='sanli_data.json';
+var RAW=null,LAST_MTIME=0;
+var charts={};
+var state={bus:new Set(),dept:'',valid:'',q:'',auto:true,iv:60000,theme:'light'};
+/* 主脚本默认加载是否成功触发（兜底用）。若主脚本在 fetchData 默认调用前异常中断，
+   此标记保持 false，历史脚本初始化时会主动拉取最新数据，保证首屏即见最新数据集。 */
+var _MAIN_LOADED=false;
+
+try{var ts=localStorage.getItem('hzb-sanli-theme');if(ts==='dark'){state.theme='dark';document.body.classList.add('dark');document.getElementById('btn-theme').textContent='☀️ 浅色'}}catch(e){}
+
+function fetchData(cb){
+  function applyData(d){
+    d._loaded=Date.now();
+    var fresh = d.meta && d.meta.file_mtime_ts !== LAST_MTIME;
+    if(d.meta&&d.meta.file_mtime_ts)LAST_MTIME=d.meta.file_mtime_ts;
+    RAW=d;
+    if(fresh&&LAST_MTIME)toast('数据已刷新 ✓');
+    if(cb)cb();
+  }
+  fetch(LIVE_URL).then(function(r){return r.json()}).then(applyData)
+    .catch(function(e){if(EMBEDDED_DATA)applyData(EMBEDDED_DATA);else console.error(e)});
+}
+
+function fmtNum(v){if(v==null)return'--';if(typeof v==='number')return v>=100?v.toFixed(0):v>=10?v.toFixed(1):v.toFixed(2);return v}
+function fmtMoney(v){if(v==null)return'--';if(typeof v!=='number')return fmtNum(v);var neg=v<0;var a=Math.abs(v);var s=a>=1000?a.toLocaleString('zh-CN',{maximumFractionDigits:0}):(a>=100?a.toFixed(0):a>=10?a.toFixed(1):a.toFixed(2));return (neg?'-':'')+s}
+function shortName(s){return (s||'').replace('<CITY>','').replace('事业部','').replace('业务','').replace('部门','')}
+
+function renderAll(){
+  if(!RAW)return;
+  buildFilters();
+  var r=computeFiltered();
+  renderKPIs(r);
+  renderTable(r);
+  renderCombo(r);
+  updateMeta();
+}
+
+function buildFilters(){
+  var bus=new Set();
+  RAW.employees.forEach(function(e){if(e.事业部)bus.add(e.事业部)});
+  var html='';
+  bus.forEach(function(b){if(!b)return;
+    html+='<span class="chip'+(state.bus.has(b)?' on':'')+'" onclick="toggleBu(\''+b.replace(/'/g,"\\'")+'\')">'+shortName(b)+'</span>';
+  });
+  document.getElementById('chip-bu').innerHTML=html+'<span class="chip" onclick="clearBu()">↺ 重置</span>';
+  var depts=new Set(),sel=document.getElementById('sel-dept');
+  RAW.employees.forEach(function(e){if(e.部门)depts.add(e.部门)});
+  sel.innerHTML='<option value="">全部部门</option>';
+  depts.forEach(function(d){sel.innerHTML+='<option value="'+d+'">'+d+'</option>'});
+  sel.value=state.dept;
+  document.getElementById('sel-valid').value=state.valid;
+}
+function toggleBu(b){state.bus.has(b)?state.bus.delete(b):state.bus.add(b);applyFilter()}
+function clearBu(){state.bus.clear();applyFilter()}
+function applyFilter(){
+  state.dept=document.getElementById('sel-dept').value;
+  state.valid=document.getElementById('sel-valid').value;
+  state.q=document.getElementById('search-q').value.trim();
+  renderAll();
+}
+var _st=null;function debounceSearch(){clearTimeout(_st);_st=setTimeout(applyFilter,250)}
+function clearSearch(){document.getElementById('search-q').value='';applyFilter()}
+
+function computeFiltered(){
+  var bus=state.bus,dept=state.dept,valid=state.valid,q=state.q;
+  var fBus=RAW.bus.filter(function(b){return bus.size===0||bus.has(b.事业部)});
+  var fEmp=RAW.employees.filter(function(e){
+    if(bus.size>0&&!bus.has(e.事业部))return false;
+    if(dept&&e.部门!==dept)return false;
+    if(valid&&e.是否有效人力!==valid)return false;
+    if(q&&e.姓名.indexOf(q)<0&&e.工号.indexOf(q)<0)return false;
+    return true;
+  });
+  return {bus:fBus,employees:fEmp};
+}
+
+function renderKPIs(r){
+  var s=RAW.summary;
+  var lv=s.等级||{};
+  var cards=[
+    {l:'员工总人数',v:RAW.total,sub:'共 '+RAW.bus.length+' 个事业部',c:'var(--kpi0)'},
+    {l:'英雄人力',v:lv['英雄人力']||0,sub:'达成英雄值',c:RAW.level_colors['英雄人力']},
+    {l:'标准人力',v:lv['标准人力']||0,sub:'达成标准值',c:RAW.level_colors['标准人力']},
+    {l:'破零人力',v:lv['破零人力']||0,sub:'达成破零值',c:RAW.level_colors['破零人力']},
+    {l:'无效人力',v:lv['无效人力']||0,sub:'未破零',c:RAW.level_colors['无效人力']},
+    {l:'有效人力',v:s.有效人力||0,sub:'是否有效人力=是',c:'var(--kpi5)'},
+    {l:'快照时间',v:(RAW.meta.data_time||'').slice(-8)||'--',sub:(RAW.meta.file_mtime||'').slice(11)||'--',c:'var(--kpi7)'}
+  ];
+  var html='';
+  cards.forEach(function(c){html+='<div class="kpi-card" style="border-left-color:'+c.c+'"><div class="kpi-label">'+c.l+'</div><div class="kpi-val" style="color:'+c.c+'">'+c.v+'</div><div class="kpi-sub">'+c.sub+'</div></div>'});
+  document.getElementById('kpi-grid').innerHTML=html;
+}
+
+function initOrGet(id){if(!charts[id])charts[id]=echarts.init(document.getElementById(id));charts[id].clear();return charts[id]}
+
+// 各事业部三力等级人数 组合图（堆叠柱）
+function renderCombo(r){
+  var cats=r.bus.map(function(b){return shortName(b.事业部)});
+  // 底→顶：无效 → 破零 → 标准 → 英雄
+  var order=(RAW.levels||['英雄人力','标准人力','破零人力','无效人力']).slice().reverse();
+  var series=order.map(function(lv){
+    return {
+      name:lv,type:'bar',stack:'x',
+      data:r.bus.map(function(b){return (b.等级&&b.等级[lv])||0}),
+      itemStyle:{color:RAW.level_colors[lv]||'#999'},
+      label:{show:true,position:'inside',formatter:function(p){return p.value>0?p.value:''},color:'#fff',fontWeight:700}
+    };
+  });
+  var opt={
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},
+      formatter:function(ps){var total=0;var html=ps[0].name;ps.forEach(function(p){total+=p.value});html+='<br/>总计 <b>'+total+'</b> 人';ps.forEach(function(p){if(p.value>0)html+='<br/>'+p.marker+p.seriesName+' <b>'+p.value+'</b> 人'});return html}},
+    legend:{bottom:0,textStyle:{color:state.theme==='dark'?'#94a3b8':'#666'}},
+    grid:{left:120,right:20,top:20,bottom:40},
+    xAxis:{type:'value',splitLine:{lineStyle:{color:state.theme==='dark'?'#334155':'#e5e7eb'}},minInterval:1},
+    yAxis:{type:'category',data:cats,inverse:true,axisLabel:{fontSize:11}},
+    series:series
+  };
+  initOrGet('c_combo').setOption(opt);
+}
+
+function forceCell(f,emp){
+  var o=emp.三力[f];
+  var b='';
+  if(o.状态==='达成')b='<span class="badge pass">达成</span>';
+  else if(o.状态==='未达成')b='<span class="badge fail">未达成</span>';
+  else b='<span class="badge skip">未设</span>';
+  var std=o.标准!=null?fmtMoney(o.标准):'—';
+  var gap=o.差距!=null?fmtMoney(o.差距):'—';
+  return '<div class="fcell">'+b+'<div class="std">标准 '+std+' · 差距 '+gap+'</div></div>';
+}
+
+function validBadge(v){
+  if(v==='是')return '<span class="badge pass">有效</span>';
+  if(v==='否')return '<span class="badge fail">无效</span>';
+  if(v==='不考核')return '<span class="badge warn">不考核</span>';
+  return v||'--';
+}
+
+function renderTable(r){
+  var emps=r.employees.slice().sort(function(a,b){return (a.事业部||'').localeCompare(b.事业部||'','zh')||(a.部门||'').localeCompare(b.部门||'','zh')});
+  var html='<thead><tr>';
+  html+='<th>姓名</th><th>事业部</th><th>部门</th><th>状态</th><th>岗龄</th><th>有效人力</th><th>业绩</th>';
+  RAW.forces.forEach(function(f){html+='<th>'+f+'</th>'});
+  html+='</tr></thead><tbody>';
+  if(emps.length===0){html+='<tr><td colspan="'+(7+RAW.forces.length)+'" style="text-align:center;color:var(--muted);padding:24px">无匹配结果</td></tr>';}
+  else{
+    emps.forEach(function(e){
+      var stb=e.状态==='试用'?'<span class="badge warn">试用</span>':(e.状态==='正式'?'<span class="badge info">正式</span>':e.状态||'--');
+      html+='<tr><td><b>'+e.姓名+'</b><div class="std" style="color:var(--muted);font-size:11px">'+e.工号+'</div></td>';
+      html+='<td>'+shortName(e.事业部)+'</td><td>'+e.部门+'</td><td>'+stb+'</td><td>'+e.岗龄+'</td><td>'+validBadge(e.是否有效人力)+'</td><td>'+fmtMoney(e.业绩)+'</td>';
+      RAW.forces.forEach(function(f){html+='<td>'+forceCell(f,e)+'</td>'});
+      html+='</tr>';
+    });
+  }
+  html+='</tbody>';
+  document.getElementById('tbl-sanli').innerHTML=html;
+  document.getElementById('total-count').textContent='显示 '+emps.length+' / '+(RAW.employees||[]).length+' 人';
+}
+
+function updateMeta(){
+  document.getElementById('meta-dt').textContent=RAW.meta.data_time||'--';
+  document.getElementById('meta-mt').textContent=(RAW.meta.file_mtime||'').slice(11)||'--';
+  document.getElementById('meta-status').textContent='就绪 · '+(state.auto?'自动刷新中':'手动模式');
+}
+
+var countdownTimer=null,countdownVal=state.iv/1000;
+function startRefresh(){
+  clearInterval(countdownTimer);clearInterval(window.__pollTimer);
+  if(state.auto&&state.iv>0){
+    countdownVal=state.iv/1000;
+    document.getElementById('countdown').textContent=countdownVal;
+    countdownTimer=setInterval(function(){ if (window.VIEWING_HISTORY){document.getElementById('countdown').textContent='--';return;} countdownVal--;document.getElementById('countdown').textContent=Math.max(countdownVal,0)},1000);
+    window.__pollTimer=setInterval(function(){manualRefresh()},state.iv);
+    document.getElementById('live-dot').style.background='var(--green)';
+  }else{
+    document.getElementById('countdown').textContent='--';
+    document.getElementById('live-dot').style.background='var(--red)';
+  }
+}
+function setMyInterval(){var v=parseInt(document.getElementById('sel-interval').value)*1000;state.iv=v;state.auto=v>0;startRefresh()}
+function manualRefresh(){ if (window.VIEWING_HISTORY) return; /*H2 历史查看中，不用最新数据顶掉历史*/ fetchData(renderAll);countdownVal=state.iv/1000;document.getElementById('countdown').textContent=countdownVal}
+
+function toggleTheme(){
+  state.theme=state.theme==='light'?'dark':'light';
+  document.body.classList.toggle('dark',state.theme==='dark');
+  document.getElementById('btn-theme').textContent=state.theme==='dark'?'☀️ 浅色':'🌙 深色';
+  localStorage.setItem('hzb-sanli-theme',state.theme);
+  renderCombo(computeFiltered());
+}
+
+function exportCSV(){
+  var emps=RAW.employees||[];if(!emps.length)return;
+  var keys=['姓名','工号','事业部','部门','状态','岗龄','是否有效人力','业绩'];
+  RAW.forces.forEach(function(f){keys.push(f+'_标准');keys.push(f+'_是否达成');keys.push(f+'_差距')});
+  var csv='\uFEFF'+keys.join(',')+'\n';
+  emps.forEach(function(e){
+    var row=[e.姓名,e.工号,e.事业部,e.部门,e.状态,e.岗龄,e.是否有效人力,e.业绩];
+    RAW.forces.forEach(function(f){var o=e.三力[f];row.push(o.标准,o.是否达成,o.差距)});
+    csv+=row.map(function(v){if(v==null)return'';if(typeof v==='string')return'"'+v.replace(/"/g,'""')+'"';return v}).join(',')+'\n';
+  });
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='<CITY>员工三力明细_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+
+function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show')},2000)}
+
+/* R39：先挂刷新定时器再拉数据 —— 反过来时，fetchData 一旦抛错就会中断本块，
+   回调里的 startRefresh() 永不执行、自动刷新失效。 */
+state.iv=20000;state.auto=true;startRefresh();
+try{ fetchData(renderAll); }catch(e){ console.error('[fetchData]', e); }
+_MAIN_LOADED = true;
+window.addEventListener('resize',function(){for(var k in charts)charts[k].resize()});
+</script>
+<!-- MiniQA:start -->
+<script>
+/* ============================================================
+ * MiniQA —— 数据问答助手（AI 开放问答 + 全工作空间数据注入）
+ *  - 每个页面自动 fetch 同源 workspace_data.json（活动量+三力+人员+录音质检）
+ *    作为 AI 回答背景；加载失败回退到页面内联数据。
+ *  - 支持多轮对话（记住上下文）与流式生成（"思考"过程可见）。
+ *  - 优先走服务端代理 SPARK_PROXY_URL 调用讯飞星火（密钥仅存于代理侧，不留前端）；
+ *    代理未配置时回退到浏览器直连（仅过渡用，代理上线后应删除回退）。
+ * ============================================================ */
+(function () {
+  "use strict";
+
+  /* ---------- 服务端代理地址（部署 Cloudflare Worker 后填入） ---------- */
+  /* 例：https://spark-proxy-xxxx.workers.dev  —— 密钥只在 Worker 侧，前端不再明文 */
+  var SPARK_PROXY_URL = "";
+
+  /* ---------- 直连降级配置（仅当 SPARK_PROXY_URL 为空时启用；代理上线后删除） ---------- */
+  var SPARK = {
+    appid: "735e0119",
+    apiKey: "a0628d70545044f5bd0b00c9b49fa8a3",
+    apiSecret = <REDACTED>
+    host: "spark-api.xf-yun.com",
+    maxTokens: 1024,
+    temperature: 0.4,
+    models: [
+      { name: "Spark Lite", path: "/v1.1/chat", domain: "lite" },
+      { name: "Spark Max", path: "/v3.5/chat", domain: "generalv3.5" }
+    ]
+  };
+
+  /* ---------- 数据读取（兼容 const 词法全局与 window 全局） ---------- */
+  function getRaw() {
+    try { if (typeof RAW !== "undefined" && RAW && RAW.total) return RAW; } catch (e) {}
+    try { if (window.RAW && window.RAW.total) return window.RAW; } catch (e) {}
+    return null;
+  }
+  function getDat() {
+    try { if (typeof DATA !== "undefined" && DATA && DATA.agentSummary) return DATA; } catch (e) {}
+    try { if (window.DATA && window.DATA.agentSummary) return window.DATA; } catch (e) {}
+    return null;
+  }
+  function fmt(n) { return Math.round(Number(n) * 100) / 100; }
+  function pct(n) { return (Math.round(Number(n) * 10) / 10) + "%"; }
+  function pctf(n) { return pct(Number(n) * 100); }
+
+  /* ---------- 统一数据背景：优先 fetch 同源 workspace_data.json ---------- */
+  function buildContext() {
+    return new Promise(function (resolve) {
+      var fallback = function () {
+        var raw = getRaw(), dat = getDat();
+        if (raw && raw.total) return Promise.resolve(buildActivityText(raw));
+        if (dat && dat.agentSummary) return Promise.resolve(buildCallText(dat));
+        return Promise.resolve("");
+      };
+      if (typeof fetch !== "function") { return resolve(fallback()); }
+      fetch("./workspace_data.json", { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http " + r.status)); })
+        .then(function (d) {
+          var t = (d && d.context_text) || "";
+          if (t && t.length > 30) resolve(t); else resolve(fallback());
+        })
+        .catch(function () { resolve(fallback()); });
+    });
+  }
+  function buildActivityText(d) {
+    var t = d.total || [], s = d.stats || [], meta = d.meta || {};
+    var n = t.filter(function (x) { return x["是否达标"] === "达标"; }).length;
+    var lines = ["【某公司活动量看板】数据时间：" + (meta.data_time || "未知")];
+    lines.push("考核总人数" + fmt(sumN(s, "总人数")) + "人，" + s.length + "个部门；全员明细" + t.length + "人，完成率均值" + pctf(avgN(t, "完成率")) + "，达标" + n + "人（达标率" + pct(t.length ? n / t.length * 100 : 0) + "）");
+    lines.push("见客合计" + fmt(sumN(t, "见客合计")) + "次，上门" + fmt(sumN(t, "当日上门量")) + "，外出" + fmt(sumN(t, "当日外出量")));
+    return lines.join("\n");
+  }
+  function buildCallText(d) {
+    var k = d.kpi || {}, rs = d.recStat || {}, ags = d.agentSummary || [], recs = d.recordings || [];
+    var lines = ["【某公司销售通话录音质检报告】数据日期：" + ((d.meta && d.meta.date) || "未知")];
+    lines.push("当日拨打" + fmt(k.call_total) + "通，接通" + fmt(k.connect_total) + "通（接通率" + pct((k.connect_rate || 0) * 100) + "），90天加微" + fmt(k.wechat_total) + "，月累计业绩¥" + fmt(k.profit_total));
+    lines.push("录音库" + rs.total + "段，已转写质检" + recs.filter(function (r) { return r.transcribed; }).length + "段（≥10秒）");
+    var sorted = ags.slice().sort(function (a, b) { return b.overall - a.overall; });
+    if (sorted.length) lines.push("电邀规划师综合分：" + sorted.map(function (a) { return a.person + " " + fmt(a.overall) + "/5(样本" + a.count + ")"; }).join("、"));
+    return lines.join("\n");
+  }
+  function sumN(a, k) { return (a || []).reduce(function (s, x) { return s + (Number(x[k]) || 0); }, 0); }
+  function avgN(a, k) {
+    var v = (a || []).map(function (x) { return Number(x[k]) || 0; }).filter(function (x) { return !isNaN(x); });
+    return v.length ? v.reduce(function (p, c) { return p + c; }, 0) / v.length : 0;
+  }
+
+  /* ---------- 多轮对话上下文 ---------- */
+  var conversation = []; // [{role:'user'|'assistant', content:'...'}]
+  var MAX_HISTORY = 12;
+  function pushTurn(role, content) {
+    conversation.push({ role: role, content: content });
+    if (conversation.length > MAX_HISTORY) conversation = conversation.slice(conversation.length - MAX_HISTORY);
+  }
+
+  /* ---------- 调星火：优先走代理（流式），否则浏览器直连 ---------- */
+  function askLLM(question, context, onToken, onDone, onError) {
+    if (SPARK_PROXY_URL && SPARK_PROXY_URL.length > 4) {
+      return askViaProxy(question, context, onToken, onDone, onError);
+    }
+    return askDirect(question, context, onToken, onDone, onError);
+  }
+
+  /* ----- 服务端代理（密钥不出现在前端） ----- */
+  function askViaProxy(question, context, onToken, onDone, onError) {
+    var payload = {
+      context: context || "",
+      history: conversation.slice(0, -1), // 不含当前这轮 user
+      question: question
+    };
+    fetch(SPARK_PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function (resp) {
+      if (!resp.ok) { throw new Error("代理返回 " + resp.status); }
+      if (!resp.body || !resp.body.getReader) { return resp.text().then(function (t) { onToken(t); onDone(); }); }
+      var reader = resp.body.getReader();
+      var decoder = new TextDecoder("utf-8");
+      function pump() {
+        return reader.read().then(function (r) {
+          if (r.done) { onDone(); return; }
+          onToken(decoder.decode(r.value, { stream: true }));
+          return pump();
+        });
+      }
+      return pump();
+    }).catch(function (e) { onError(e); });
+  }
+
+  /* ----- 浏览器直连降级（过渡用，含密钥） ----- */
+  function b64(buf) {
+    var s = "";
+    for (var i = 0; i < buf.length; i++) s += String.fromCharCode(buf[i]);
+    return btoa(s);
+  }
+  function hmacSha256Base64(secret, message) {
+    var enc = new TextEncoder();
+    return crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"])
+      .then(function (key) { return crypto.subtle.sign("HMAC", key, enc.encode(message)); })
+      .then(function (sig) { return b64(new Uint8Array(sig)); });
+  }
+  function sparkUrl(model) {
+    var date = new Date().toUTCString();
+    var signatureOrigin = "host: " + SPARK.host + "\ndate: " + date + "\nGET " + model.path + " HTTP/1.1";
+    return hmacSha256Base64(SPARK.apiSecret, signatureOrigin).then(function (signature) {
+      var authorizationOrigin = 'api_key="' + SPARK.apiKey + '", algorithm="hmac-sha256", headers="host date request-line", signature="' + signature + '"';
+      var authorization = btoa(authorizationOrigin);
+      return "wss://" + SPARK.host + model.path + "?authorization=" + encodeURIComponent(authorization) + "&date=" + encodeURIComponent(date) + "&host=" + encodeURIComponent(SPARK.host);
+    });
+  }
+  function askDirect(question, context, onToken, onDone, onError) {
+    var models = SPARK.models || [];
+    var systemMsg = "你是「小析」，某公司业务数据助手。请用简体中文、分点简洁回答，优先引用【数据背景】中的真实数字，不要编造。最多200字。\n【数据背景】\n" + context;
+    var messages = [{ role: "user", content: systemMsg + "\n【用户问题】\n" + question }];
+    // 直连降级仅支持单轮（上下文已在 system 内）
+    var tryOne = function (idx) {
+      if (idx >= models.length) { onError(new Error("所有模型均不可用")); return; }
+      var model = models[idx];
+      sparkUrl(model).then(function (url) {
+        var ws = new WebSocket(url);
+        var done = false, failed = false, full = "";
+        var timer = setTimeout(function () { if (!done) { done = true; try { ws.close(); } catch (e) {} tryOne(idx + 1); } }, 25000);
+        ws.onopen = function () {
+          ws.send(JSON.stringify({
+            header: { app_id: SPARK.appid, uid: "miniqa" },
+            parameter: { chat: { domain: model.domain, temperature: SPARK.temperature, max_tokens: SPARK.maxTokens } },
+            payload: { message: { text: [{ role: "user", content: systemMsg }, { role: "user", content: question }] } }
+          }));
+        };
+        ws.onmessage = function (ev) {
+          var d; try { d = JSON.parse(ev.data); } catch (e) { return; }
+          if (d.header && d.header.code !== 0) {
+            if (!done) { done = true; clearTimeout(timer); failed = true; try { ws.close(); } catch (e) {} tryOne(idx + 1); }
+            return;
+          }
+          var t = (d.payload && d.payload.choices && d.payload.choices.text) || [];
+          t.forEach(function (x) { if (x && x.content) { full += x.content; onToken(x.content); } });
+          if (d.header && d.header.status === 2) { if (!done) { done = true; clearTimeout(timer); onDone(); } }
+        };
+        ws.onerror = function () { if (!done && !failed) { done = true; clearTimeout(timer); tryOne(idx + 1); } };
+      }).catch(function () { if (!done) { done = true; tryOne(idx + 1); } });
+    };
+    tryOne(0);
+  }
+
+  /* ============================================================
+   * UI 渲染（自注入样式 + DOM + 对话流）
+   * ============================================================ */
+  function injectStyle() {
+    var css = [
+      "#qaFab{position:fixed;right:20px;bottom:20px;z-index:99999;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;",
+      "  background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:24px;box-shadow:0 6px 18px rgba(79,70,229,.45);transition:transform .15s}",
+      "#qaFab:hover{transform:scale(1.08)}",
+      "#qaWidget{position:fixed;right:20px;bottom:84px;z-index:99999;width:380px;max-width:calc(100vw - 40px);height:520px;max-height:calc(100vh - 110px);",
+      "  background:var(--card,#fff);color:var(--text,#1a1a2e);border:1px solid var(--border,#e5e7eb);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.22);",
+      "  display:flex;flex-direction:column;overflow:hidden;font-family:var(--font,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif)}",
+      "#qaWidget.qa-hidden{display:none}",
+      "#qaHeader{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:700;font-size:15px}",
+      "#qaClose{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1}",
+      "#qaClear{background:none;border:1px solid rgba(255,255,255,.5);color:#fff;font-size:11px;padding:2px 8px;border-radius:8px;cursor:pointer;margin-right:6px}",
+      "#qaBadge{font-size:10px;background:rgba(255,255,255,.22);padding:2px 7px;border-radius:8px;margin-left:6px;font-weight:600}",
+      "#qaBody{flex:1;overflow-y:auto;padding:12px;font-size:13.5px;line-height:1.6}",
+      "#qaBody .qa-msg{margin-bottom:10px;padding:9px 12px;border-radius:10px;white-space:pre-wrap;word-break:break-word}",
+      "#qaBody .qa-bot{background:var(--bg,#f4f6f9);color:var(--text,#1a1a2e)}",
+      "#qaBody .qa-user{background:#4f46e5;color:#fff;margin-left:36px}",
+      "#qaBody .qa-thinking{color:#7c3aed;font-style:italic}",
+      "#qaBody .qa-cursor::after{content:'▋';animation:qablink 1s steps(2) infinite;color:#7c3aed}",
+      "@keyframes qablink{0%,50%{opacity:1}51%,100%{opacity:0}}",
+      "#qaChips{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 8px}",
+      "#qaChips .qa-chip{font-size:12px;padding:5px 10px;border:1px solid var(--border,#e5e7eb);border-radius:14px;background:var(--bg,#f4f6f9);color:var(--muted,#6b7280);cursor:pointer}",
+      "#qaChips .qa-chip:hover{border-color:#4f46e5;color:#4f46e5}",
+      "#qaInputBar{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border,#e5e7eb)}",
+      "#qaInput{flex:1;padding:9px 12px;border:1px solid var(--border,#e5e7eb);border-radius:9px;font-size:13.5px;outline:none;background:var(--bg,#f4f6f9);color:var(--text,#1a1a2e)}",
+      "#qaInput:focus{border-color:#4f46e5}",
+      "#qaSend{padding:0 16px;border:none;border-radius:9px;background:#4f46e5;color:#fff;font-weight:600;cursor:pointer;font-size:13.5px}",
+      "#qaSend:hover{background:#4338ca}"
+    ].join("\n");
+    var st = document.createElement("style");
+    st.textContent = css;
+    document.head.appendChild(st);
+  }
+  function buildUI() {
+    injectStyle();
+    var fab = document.createElement("button");
+    fab.id = "qaFab"; fab.textContent = "💬"; fab.title = "数据助手";
+    var box = document.createElement("div");
+    box.id = "qaWidget"; box.className = "qa-hidden";
+    var chips = ["整体达标情况", "三力有效人力", "人员业绩概况", "哪位电邀规划师最好", "录音质检硬伤", "公司整体建议"];
+    box.innerHTML =
+      '<div id="qaHeader"><span>📊 数据助手 · 小析<span id="qaBadge">AI</span></span>' +
+      '<span><button id="qaClear" title="清空对话上下文">清空</button><button id="qaClose">×</button></span></div>' +
+      '<div id="qaBody"></div>' +
+      '<div id="qaChips">' + chips.map(function (c) { return '<span class="qa-chip">' + c + "</span>"; }).join("") + "</div>" +
+      '<div id="qaInputBar"><input id="qaInput" placeholder="问任意数据问题，如「公司整体情况？」" /><button id="qaSend">发送</button></div>';
+    document.body.appendChild(fab);
+    document.body.appendChild(box);
+    var body = box.querySelector("#qaBody");
+    body.appendChild(msg("bot", "你好，我是数据助手「小析」🤖\n我已掌握工作空间全部看板数据（活动量 / 员工三力 / 人员分析 / 通话录音质检），可连续对话、记得上下文。用自然语言问我即可，例如「整体达标情况？」「哪位电邀规划师最需要改进？」「公司整体建议？」。"));
+
+    function msg(role, text, extraCls) {
+      var d = document.createElement("div");
+      d.className = "qa-msg " + (role === "user" ? "qa-user" : "qa-bot") + (extraCls ? " " + extraCls : "");
+      d.textContent = text;
+      return d;
+    }
+    var busy = false;
+    function send(q) {
+      q = (q || "").trim();
+      if (!q || busy) return;
+      busy = true;
+      body.appendChild(msg("user", q));
+      pushTurn("user", q);
+      // 思考过程：两步可见
+      var think = msg("bot", "📚 正在结合全部看板数据…", "qa-thinking qa-cursor");
+      body.appendChild(think);
+      body.scrollTop = body.scrollHeight;
+      buildContext().then(function (ctx) {
+        if (!ctx) {
+          think.textContent = "⚠️ 当前页面工作空间数据尚未加载，请稍候刷新后再试。";
+          think.classList.remove("qa-thinking", "qa-cursor");
+          busy = false; return;
+        }
+        think.textContent = "🧠 小析正在分析…";
+        // 流式：首字到达后进入"生成中"光标态
+        var started = false;
+        askLLM(q, ctx,
+          function (token) {
+            if (!started) { started = true; think.textContent = ""; think.classList.remove("qa-thinking"); think.classList.add("qa-cursor"); }
+            think.textContent += token;
+            body.scrollTop = body.scrollHeight;
+          },
+          function () {
+            think.classList.remove("qa-cursor");
+            pushTurn("assistant", think.textContent);
+            busy = false;
+          },
+          function (e) {
+            think.textContent = "⚠️ AI 服务暂不可用：" + (e && e.message ? e.message : e) +
+              "\n\n可稍后重试；若持续失败，可能是代理/接口额度或网络限制。";
+            think.classList.remove("qa-thinking", "qa-cursor");
+            busy = false;
+          });
+      }).catch(function () {
+        think.textContent = "⚠️ 数据背景加载失败，请刷新页面后重试。";
+        think.classList.remove("qa-thinking", "qa-cursor");
+        busy = false;
+      });
+    }
+    fab.addEventListener("click", function () { box.classList.toggle("qa-hidden"); });
+    box.querySelector("#qaClose").addEventListener("click", function () { box.classList.add("qa-hidden"); });
+    box.querySelector("#qaClear").addEventListener("click", function () {
+      conversation = [];
+      body.innerHTML = "";
+      body.appendChild(msg("bot", "🧹 已清空对话上下文，新话题开始。"));
+    });
+    box.querySelector("#qaSend").addEventListener("click", function () { send(box.querySelector("#qaInput").value); box.querySelector("#qaInput").value = ""; });
+    box.querySelector("#qaInput").addEventListener("keydown", function (e) { if (e.key === "Enter") { send(this.value); this.value = ""; } });
+    Array.prototype.forEach.call(box.querySelectorAll(".qa-chip"), function (c) {
+      c.addEventListener("click", function () { send(c.textContent); });
+    });
+  }
+
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", buildUI);
+    } else {
+      buildUI();
+    }
+  }
+  if (typeof globalThis !== "undefined") {
+    globalThis.MiniQA = { askLLM: askLLM, buildContext: buildContext, version: "3.0" };
+  }
+})();
+
+</script>
+<!-- MiniQA:end -->
+<script>
+/* ===== 历史时间选择器（员工三力） ===== */
+/* LIVE_URL 已上移至主脚本块声明（R39），此处不再重复声明，直接引用。 */
+var HIST_BASE = (LIVE_URL || '').replace(/_data\.json$/, '').replace(/\.json$/, '');
+var VIEWING_HISTORY = false;
+var _histCur = null;
+
+function _todayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+}
+function setHistBanner(date) {
+  var b = document.getElementById('histBanner');
+  if (!b) return;
+  if (date) { b.style.display = 'block'; b.innerHTML = '📅 正在查看历史：<b>' + date + '</b>（非实时数据）'; }
+  else { b.style.display = 'none'; }
+}
+function loadDate(date) {
+  if (!date) return;
+  var ym = date.slice(0, 7);
+  var url = 'hist/' + HIST_BASE + '/' + ym + '/' + date + '.json';
+  fetch(url).then(function (r) { if (!r.ok) throw new Error('404'); return r.json(); })
+    .then(function (d) { RAW = d; D = d; VIEWING_HISTORY = true; _histCur = date; setHistBanner(date); renderAll(); })
+    .catch(function (e) { alert('该日期无快照：' + date); });
+}
+function exitHistory() {
+  VIEWING_HISTORY = false; _histCur = null; setHistBanner(null);
+  if (typeof loadData === 'function') loadData();
+  else if (typeof fetchData === 'function') fetchData(renderAll);
+}
+function loadHistManifest(cb) {
+  fetch('hist/manifest.json').then(function (r) { return r.json(); }).then(function (m) { cb(m); })
+    .catch(function (e) { cb(null); });
+}
+var _histManifest = null;
+
+/* 按月度目录展示：月份下拉 → 该月所有可用日期 → 点某天即显示 */
+function renderHistMonth() {
+  var sel = document.getElementById('histMonth');
+  var box = document.getElementById('histChips');
+  var ym = sel && sel.value;
+  if (!ym) { box.innerHTML = '<span style="color:#888">请选择月份</span>'; return; }
+  loadHistManifest(function (m) {
+    if (!m) { box.innerHTML = '<span style="color:#b00">历史清单加载失败</span>'; return; }
+    _histManifest = m;
+    var dates = (m.modules && m.modules[HIST_BASE]) || [];
+    var list = dates.filter(function (d) { return d.slice(0, 7) === ym; }).sort();
+    _fillHistMonths(m);
+    box.innerHTML = '';
+    if (!list.length) { box.innerHTML = '<span style="color:#888">该月无快照</span>'; return; }
+    list.forEach(function (d) {
+      var dt = ''; try { dt = m.data_time[HIST_BASE][d]; } catch (_) {}
+      var chip = document.createElement('span');
+      chip.className = 'hist-chip' + (d === _histCur ? ' on' : '');
+      chip.textContent = d.slice(8) + '日' + (dt ? (' · ' + dt) : '');
+      chip.title = d;
+      chip.onclick = function () { _histCur = d; loadDate(d); renderHistMonth(); };
+      box.appendChild(chip);
+    });
+  });
+}
+
+function _fillHistMonths(m) {
+  var sel = document.getElementById('histMonth');
+  if (!sel) return;
+  var dates = (m.modules && m.modules[HIST_BASE]) || [];
+  var months = {};
+  dates.forEach(function (d) { months[d.slice(0, 7)] = 1; });
+  var keys = Object.keys(months).sort().reverse();
+  var cur = sel.value;
+  var html = '';
+  keys.forEach(function (k) {
+    var cnt = dates.filter(function (d) { return d.slice(0, 7) === k; }).length;
+    html += '<option value="' + k + '">' + k + '（' + cnt + ' 天）</option>';
+  });
+  if (html) sel.innerHTML = html;
+  if (cur && keys.indexOf(cur) >= 0) sel.value = cur;
+  else if (keys.length) sel.value = keys[0];
+}
+function toggleHist() {
+  var p = document.getElementById('histPanel');
+  var open = (p.style.display === 'block');
+  p.style.display = open ? 'none' : 'block';
+  if (!open) renderHistMonth();
+}
+function initHistoryBar() {
+  if (document.getElementById('histBar')) return;
+  var css = ''
+    + '.hist-chip{display:inline-block;padding:4px 10px;margin:3px;border:1px solid #ddd;border-radius:14px;cursor:pointer;font-size:12px;background:#fff;color:#333}'
+    + '.hist-chip:hover{background:#eef}.hist-chip.on{background:#4f46e5;color:#fff;border-color:#4f46e5}'
+    + '#histBanner{display:none;position:fixed;top:0;left:0;right:0;z-index:9998;background:#fff7e6;border-bottom:1px solid #f0c36d;color:#8a6d3b;text-align:center;padding:6px;font-size:13px}'
+    + '#histBar{position:fixed;top:10px;right:12px;z-index:99999;font-size:14px}'
+    + '#histBar .hb-btn{background:#4f46e5;color:#fff;border:2px solid #fff;border-radius:22px;padding:9px 18px;cursor:pointer;font-weight:700;font-size:14px;box-shadow:0 4px 14px rgba(79,70,229,.45)}'
+    + '#histBar .hb-btn:hover{background:#4338ca}'
+    + '#histPanel{display:none;position:fixed;top:46px;right:8px;z-index:9999;background:#fff;border:1px solid #ddd;border-radius:10px;padding:12px;box-shadow:0 6px 24px rgba(0,0,0,.15);width:300px}'
+    + '#histPanel label{display:block;margin:6px 0 2px;color:#555}'
+    + '#histPanel select{width:100%;padding:6px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;font-size:13px}'
+    + '#histPanel .row{display:flex;gap:8px;margin-top:8px}'
+    + '#histPanel .row button{flex:1;border:none;border-radius:6px;padding:7px;cursor:pointer;font-weight:600}'
+    + '#histPanel .hint{color:#888;font-size:12px;margin-top:6px}';
+  var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+
+  var banner = document.createElement('div'); banner.id = 'histBanner'; document.body.appendChild(banner);
+  var bar = document.createElement('div'); bar.id = 'histBar';
+  bar.innerHTML = '<button class="hb-btn" onclick="toggleHist()">📅 历史</button>';
+  document.body.appendChild(bar);
+  var panel = document.createElement('div'); panel.id = 'histPanel';
+  panel.innerHTML = '<label>选择月份</label><select id="histMonth" onchange="renderHistMonth()"></select>'
+    + '<div id="histChips" style="margin-top:8px"></div>'
+    + '<div class="hint">点击某天即可查看当天历史数据</div>'
+    + '<div class="row"><button style="background:#eee;color:#333" onclick="exitHistory()">返回最新</button></div>';
+  document.body.appendChild(panel);
+  loadHistManifest(function (m) { if (m) { _histManifest = m; _fillHistMonths(m); renderHistMonth(); } });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initHistoryBar);
+else initHistoryBar();
+
+/* ===== 兜底：默认直接展示最新数据（需求 M-5）=====
+   确保「未应用任何历史筛选」时首屏即渲染最新数据集，无需用户操作。
+   仅当主脚本默认加载未成功触发（_MAIN_LOADED=false，可能因前置异常中断）时，
+   主动拉取最新数据；历史查看态（VIEWING_HISTORY）下不触发，避免与 loadDate 冲突。 */
+(function () {
+  try {
+    if (VIEWING_HISTORY) return;
+    if (typeof _MAIN_LOADED !== 'undefined' && _MAIN_LOADED) return;
+    if (typeof loadData === 'function') loadData();
+    else if (typeof fetchData === 'function') fetchData(renderAll);
+  } catch (e) {}
+})();
+
+/* ===== 缓存自愈：若本页 HTML 是被浏览器缓存的旧版（无历史按钮），自动强刷一次 ===== */
+(function(){
+  try {
+    var SELF = 'sanli_data.json';
+    var key = 'hzHistSelfHeal_v1_' + SELF;
+    if (!document.getElementById('histBar') && !sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, '1');
+      fetch('_build_fingerprint.json?t=' + Date.now(), {cache:'no-store'})
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(fp){
+          if (fp && fp.build_hash) { location.reload(true); }
+        }).catch(function(){ location.reload(true); });
+    }
+  } catch(e) {}
+})();
+</script>
+
+<script>
+/* ---- 实时时钟 / 刷新倒计时 / 同步于x秒前（注入） ---- */
+(function(){
+  var CD={last:Date.now()};
+  function pad(n){return (n<10?'0':'')+n;}
+  function hms(d){return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());}
+  function hook(){
+    if(window.fetch){
+      var f=window.fetch;
+      window.fetch=function(){
+        var r=f.apply(this,arguments);
+        try{ r && r.then && r.then(function(){CD.last=Date.now();}); }catch(e){}
+        return r;
+      };
+    }
+    if(window.XMLHttpRequest){
+      var O=XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open=function(){
+        try{ this.addEventListener('load',function(){CD.last=Date.now();}); }catch(e){}
+        return O.apply(this,arguments);
+      };
+    }
+  }
+  function ivSec(){
+    var s=document.getElementById('sel-interval');
+    var v=s?parseInt(s.value,10):0;
+    return v>0?v:0;
+  }
+  function relTxt(ts){
+    var s=Math.max(0,Math.round((Date.now()-ts)/1000));
+    if(s<60) return s+' 秒前同步';
+    var m=Math.floor(s/60);
+    if(m<60) return m+' 分钟前同步';
+    return Math.floor(m/60)+' 小时前同步';
+  }
+  function tick(){
+    var el,iv;
+    if((el=document.getElementById('live-clock'))) el.textContent=hms(new Date());
+    iv=ivSec();
+    if((el=document.getElementById('cd-live'))){
+      if (window.VIEWING_HISTORY) { el.textContent = '已暂停'; }
+      else { el.textContent = iv ? Math.max(0,Math.ceil((CD.last+iv*1000-Date.now())/1000)) : '—'; }
+    }
+    if((el=document.getElementById('live-rel'))) el.textContent = window.VIEWING_HISTORY ? '历史查看中' : relTxt(CD.last);
+    if((el=document.getElementById('live-dt'))){
+      el.textContent = hms(new Date(CD.last));
+    }
+  }
+  hook(); tick(); setInterval(tick,1000);
+})();
+</script>
+
+<style id="visitlog-style">
+#vlBtn{position:fixed;top:8px;left:8px;z-index:99998;cursor:pointer;font-size:12px;line-height:1;
+padding:6px 10px;border-radius:999px;border:1px solid #c7d0dc;background:rgba(255,255,255,.82);
+color:#3c4a5c;box-shadow:0 1px 4px rgba(30,45,70,.12);user-select:none;transition:.15s;font-family:inherit}
+#vlBtn:hover{background:#fff;border-color:#5b7396;color:#31415a;box-shadow:0 2px 8px rgba(30,45,70,.2)}
+#vlMask{position:fixed;inset:0;z-index:99999;display:none;background:rgba(24,34,52,.45);
+align-items:flex-start;justify-content:center;padding:5vh 16px;font-family:inherit}
+#vlPanel{background:#fff;border-radius:10px;box-shadow:0 12px 48px rgba(10,20,40,.35);
+width:min(860px,100%);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;
+border:1px solid #dfe5ee}
+#vlHead{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;
+background:#f2f5f9;border-bottom:1px solid #e3e8ef;color:#2c3a4e;font-size:15px}
+#vlClose{cursor:pointer;font-size:16px;padding:2px 8px;border-radius:6px;color:#6b7890}
+#vlClose:hover{background:#e3e8ef;color:#2c3a4e}
+#vlBar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;border-bottom:1px solid #eef1f6;font-size:13px;color:#3c4a5c}
+#vlBar input[type=date]{border:1px solid #c7d0dc;border-radius:6px;padding:4px 8px;font-size:13px;color:#2c3a4e}
+#vlBar button{border:1px solid #c7d0dc;background:#fff;border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer;color:#3c4a5c}
+#vlBar button:hover{border-color:#5b7396;color:#31415a}
+#vlBar button.vl-primary{background:#5b7396;border-color:#5b7396;color:#fff}
+#vlBar button.vl-primary:hover{background:#4a6284}
+#vlBody{overflow:auto;padding:12px 16px 16px;font-size:13px;color:#33415a}
+#vlLoading{padding:30px 0;text-align:center;color:#8a94a6}
+.vl-sum{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.vl-sum .vl-kpi{flex:1;min-width:140px;background:#f6f8fb;border:1px solid #e3e8ef;border-radius:8px;padding:10px 14px}
+.vl-kpi .vl-k{font-size:12px;color:#7b8698}
+.vl-kpi .vl-v{font-size:22px;font-weight:700;color:#31415a;margin-top:2px}
+.vl-sec{font-weight:700;color:#2c3a4e;margin:14px 0 6px;font-size:13px}
+.vl-sec:first-of-type{margin-top:0}
+table.vl-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.vl-tbl th,.vl-tbl td{border:1px solid #e3e8ef;padding:5px 9px;text-align:left;white-space:nowrap}
+.vl-tbl th{background:#eef2f7;color:#43536e;font-weight:600}
+.vl-tbl tr:nth-child(even) td{background:#f8fafc}
+.vl-tbl td.vl-num{text-align:right;font-variant-numeric:tabular-nums}
+.vl-bar-cell{height:8px;border-radius:4px;background:#5b7396;display:inline-block;vertical-align:middle}
+#vlErr{color:#b05a52;background:#faf1f0;border:1px solid #e8c8c5;border-radius:8px;padding:10px 14px}
+</style>
+<div id="vlBtn" title="查看看板访问记录">📋 访问记录</div>
+<div id="vlMask">
+  <div id="vlPanel">
+    <div id="vlHead"><span>📋 访问记录</span><span id="vlClose">✕</span></div>
+    <div id="vlBar">
+      <span>日期区间</span>
+      <input type="date" id="vlStart"> <span>至</span> <input type="date" id="vlEnd">
+      <button id="vlGo" class="vl-primary">查询</button>
+      <button id="vlToday">今日</button>
+      <button id="vl7">近7天</button>
+      <button id="vl30">近30天</button>
+      <span id="vlMsg" style="color:#8a94a6;margin-left:auto"></span>
+    </div>
+    <div id="vlBody"><div id="vlLoading">加载中…</div></div>
+  </div>
+</div>
+<script id="visitlog-inject">
+(function(){
+  var API='https://hzdash-d6gn9drv3691d93a1.service.tcloudbase.com/visit';
+  var KEY='hz-vis-2026';
+  var PAGE=(location.pathname||'/')+(location.search||'');
+  /* 页面加载后错峰上报一次（fail-silent，不阻塞渲染） */
+  setTimeout(function(){
+    try{
+      fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({page:PAGE}),keepalive:true}).catch(function(){});
+    }catch(e){}
+  },Math.floor(Math.random()*600)+300);
+
+  function $(id){return document.getElementById(id)}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  var PAGE_NAMES={'/':'导航页','/dash/':'活动量看板','/dash/index.html':'活动量看板',
+    '/dash/sanli.html':'三力看板','/dash/ry.html':'网销看板','/dash/ry_dy.html':'电邀看板',
+    '/dash/ry_kuaiji.html':'会计看板','/index.html':'活动量看板','/sanli.html':'三力看板',
+    '/ry.html':'网销看板'};
+  function pageName(p){p=String(p||'');var q=p.indexOf('?');if(q>=0)p=p.slice(0,q);
+    return PAGE_NAMES[p]||p;}
+  function fmtDate(d){var p=function(n){return n<10?'0'+n:''+n};
+    return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+  function today(){return fmtDate(new Date())}
+  function daysAgo(n){var d=new Date();d.setDate(d.getDate()-n);return fmtDate(d)}
+  function pp(v,max){if(!max)max=v;var w=Math.max(2,Math.round(v/max*64));
+    return '<span class="vl-bar-cell" style="width:'+w+'px"></span>';}
+
+  function load(start,end){
+    $('vlBody').innerHTML='<div id="vlLoading">加载中…</div>';
+    $('vlMsg').textContent='';
+    fetch(API+'?start='+start+'&end='+end+'&key='+encodeURIComponent(KEY))
+      .then(function(r){return r.json()})
+      .then(function(j){
+        if(!j||!j.ok){throw new Error((j&&j.error)||'查询失败');}
+        render(start,end,j);
+      })
+      .catch(function(e){
+        $('vlBody').innerHTML='<div id="vlErr">查询失败：'+esc(e.message||e)+'</div>';
+      });
+  }
+  function render(start,end,j){
+    var h='';
+    h+='<div class="vl-sum">'
+      +'<div class="vl-kpi"><div class="vl-k">'+(start===end?'今日':'区间')+'访问次数（PV）</div><div class="vl-v">'+j.total.pv+'</div></div>'
+      +'<div class="vl-kpi"><div class="vl-k">独立 IP 数（UV）</div><div class="vl-v">'+j.total.ip+'</div></div>'
+      +'<div class="vl-kpi"><div class="vl-k">统计区间</div><div class="vl-v" style="font-size:14px;line-height:2">'+start+' ~ '+end+'</div></div>'
+      +'</div>';
+    var i,maxPv;
+    h+='<div class="vl-sec">🗺️ 区域分布（按访问次数）</div>';
+    if(j.regions.length){
+      maxPv=j.regions[0].pv;
+      h+='<table class="vl-tbl"><tr><th>#</th><th>IP 区域</th><th>访问次数</th><th></th><th>独立 IP</th></tr>';
+      for(i=0;i<j.regions.length;i++){
+        h+='<tr><td>'+(i+1)+'</td><td>'+esc(j.regions[i].k)+'</td>'
+          +'<td class="vl-num">'+j.regions[i].pv+'</td><td>'+pp(j.regions[i].pv,maxPv)+'</td>'
+          +'<td class="vl-num">'+j.regions[i].ip+'</td></tr>';
+      }
+      h+='</table>';
+    }else{h+='<div style="color:#8a94a6">该区间暂无访问记录</div>';}
+    if(j.days.length){
+      h+='<div class="vl-sec">📅 按日汇总</div>';
+      maxPv=Math.max.apply(null,j.days.map(function(d){return d.pv}));
+      h+='<table class="vl-tbl"><tr><th>日期</th><th>访问次数</th><th></th><th>独立 IP</th></tr>';
+      for(i=0;i<j.days.length;i++){
+        h+='<tr><td>'+esc(j.days[i].k)+'</td><td class="vl-num">'+j.days[i].pv+'</td>'
+          +'<td>'+pp(j.days[i].pv,maxPv)+'</td><td class="vl-num">'+j.days[i].ip+'</td></tr>';
+      }
+      h+='</table>';
+    }
+    if(j.list.length){
+      h+='<div class="vl-sec">🕓 最近访问明细（最多 300 条）</div>';
+      h+='<table class="vl-tbl"><tr><th>时间</th><th>IP</th><th>区域</th><th>页面</th></tr>';
+      for(i=0;i<j.list.length;i++){
+        var it=j.list[i];
+        h+='<tr><td>'+esc(it.date)+' '+esc(it.time)+'</td><td>'+esc(it.ip)+'</td>'
+          +'<td>'+esc(it.region)+'</td><td>'+esc(pageName(it.page))+'</td></tr>';
+      }
+      h+='</table>';
+    }
+    $('vlBody').innerHTML=h;
+    $('vlMsg').textContent='共 '+j.total.pv+' 次 · '+j.total.ip+' 个 IP';
+  }
+
+  function openPanel(){
+    $('vlMask').style.display='flex';
+    $('vlStart').value=today();
+    $('vlEnd').value=today();
+    load(today(),today());
+  }
+  function closePanel(){$('vlMask').style.display='none';}
+
+  $('vlBtn').addEventListener('click',openPanel);
+  $('vlClose').addEventListener('click',closePanel);
+  $('vlMask').addEventListener('click',function(e){if(e.target===$('vlMask'))closePanel();});
+  $('vlGo').addEventListener('click',function(){
+    var s=$('vlStart').value,e=$('vlEnd').value;
+    if(!s||!e||s>e){$('vlMsg').textContent='请选择有效日期区间';return;}
+    load(s,e);
+  });
+  $('vlToday').addEventListener('click',function(){
+    $('vlStart').value=today();$('vlEnd').value=today();load(today(),today());});
+  $('vl7').addEventListener('click',function(){
+    $('vlStart').value=daysAgo(6);$('vlEnd').value=today();load($('vlStart').value,today());});
+  $('vl30').addEventListener('click',function(){
+    $('vlStart').value=daysAgo(29);$('vlEnd').value=today();load($('vlStart').value,today());});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closePanel();});
+})();
+</script>
+
+</body>
+</html>

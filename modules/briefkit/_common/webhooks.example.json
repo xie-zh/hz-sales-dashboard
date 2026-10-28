@@ -1,0 +1,7 @@
+{
+  "_说明": "机器人 Webhook 地址模板。真实地址含密钥，不入库。",
+  "activity": { "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=<WEBHOOK_KEY>", "name": "活动量战报群" },
+  "sanli":    { "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=<WEBHOOK_KEY>", "name": "三力战报群" },
+  "pk":       { "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=<WEBHOOK_KEY>", "name": "PK 战报群" },
+  "test":     { "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=<WEBHOOK_KEY>", "name": "测试群" }
+}
