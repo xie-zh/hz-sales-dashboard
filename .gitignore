@@ -1,0 +1,34 @@
+# 敏感文件与运行产物不入库
+names.json
+*.log
+logs/
+downloads/
+backups/
+browser_profile/
+state.json
+lastlog.log
+__pycache__/
+*.pyc
+*.exe
+*.tmp
+.DS_Store
+Thumbs.db
+
+# 真实数据源（Excel 源表 / 配置 / 凭证）
+config.toml
+tasks.toml
+*_cos_config.json
+迁移配置.json
+.publish_state.json
+_published.json
+_publish_request.json
+
+# 本机环境
+venv/
+.venv/
+node_modules/
+.idea/
+.vscode/
+
+# git 历史备份（含旧版未脱敏数据，勿入库）
+.git_old_backup_*/

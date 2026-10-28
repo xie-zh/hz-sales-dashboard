@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SalesPulse · 销售运营数据中台 | 作品集</title>
+<meta name="description" content="从线下 Excel 到自动化在线看板的完整工程实践：数据看板、组织健康度诊断、通话质检评分、BI 报表流水线。">
+<style>
+:root{
+  --ink:#0d1526; --ink2:#2c3a52; --muted:#66748c; --line:#e2e8f1;
+  --bg:#f5f7fb; --card:#fff;
+  --accent:#1d4ed8; --accent-soft:#eef3ff;
+  --teal:#0f766e; --amber:#b45309; --rose:#be123c; --violet:#6d28d9; --slate:#475569;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px -12px rgba(15,23,42,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Inter","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+a{color:inherit;text-decoration:none}
+code{font-family:"JetBrains Mono",Consolas,Monaco,monospace;font-size:.86em;
+  background:#eef2f8;padding:2px 6px;border-radius:5px;color:var(--ink2)}
+
+/* ---------- Hero ---------- */
+.hero{
+  position:relative;overflow:hidden;color:#e8eefb;
+  background:
+    radial-gradient(900px 420px at 88% -10%,rgba(29,78,216,.42),transparent 62%),
+    radial-gradient(620px 320px at 6% 108%,rgba(15,118,110,.26),transparent 60%),
+    linear-gradient(150deg,#0b1220 0%,#111d33 52%,#0d1728 100%);
+}
+.hero::after{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
+  background-size:52px 52px;
+  -webkit-mask-image:radial-gradient(circle at 70% 10%,#000 10%,transparent 78%);
+  mask-image:radial-gradient(circle at 70% 10%,#000 10%,transparent 78%);
+}
+.hero .wrap{position:relative;z-index:1;padding:74px 24px 62px}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:9px;
+  font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+  color:#93b4ee;border:1px solid rgba(147,180,238,.32);
+  border-radius:100px;padding:5px 14px;margin-bottom:26px;
+}
+.eyebrow i{width:5px;height:5px;border-radius:50%;background:#5b8def;display:block}
+h1{
+  font-size:clamp(30px,4.4vw,50px);line-height:1.14;font-weight:700;
+  letter-spacing:-.02em;margin-bottom:20px;
+}
+h1 em{
+  font-style:normal;
+  background:linear-gradient(96deg,#a9c6ff,#e2ecff 46%,#a6ecdd);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 1px 16px rgba(126,166,245,.28));
+}
+.lede{font-size:16.5px;color:#a9bad6;max-width:660px;line-height:1.8}
+.lede b{color:#dde7f8;font-weight:600}
+.stats{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:1px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.1);border-radius:12px;
+  overflow:hidden;margin-top:44px;max-width:860px;
+}
+.stat{background:rgba(11,18,32,.55);padding:18px 20px;backdrop-filter:blur(6px)}
+.stat b{
+  display:block;font-size:27px;font-weight:700;letter-spacing:-.02em;color:#fff;
+  font-variant-numeric:tabular-nums;line-height:1.25;
+}
+.stat span{font-size:12px;color:#8ea3c4;letter-spacing:.04em}
+
+/* ---------- 通用节 ---------- */
+section{padding:66px 0}
+.sec-head{margin-bottom:34px}
+.sec-no{
+  font-size:12px;font-weight:600;letter-spacing:.2em;color:var(--accent);
+  text-transform:uppercase;margin-bottom:10px;display:block;
+}
+h2{font-size:clamp(21px,2.6vw,27px);font-weight:700;letter-spacing:-.015em;line-height:1.35}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--muted);
+  letter-spacing:0;margin-top:9px;line-height:1.7}
+
+/* ---------- 流水线 ---------- */
+.pipe{
+  background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:30px 26px;box-shadow:var(--shadow);overflow-x:auto;
+}
+.pipe-row{display:flex;align-items:stretch;gap:0;min-width:760px}
+.node{
+  flex:1;position:relative;padding:16px 16px 14px;
+  border:1px solid var(--line);border-radius:11px;background:#fbfcfe;
+}
+.node .k{font-size:11px;letter-spacing:.1em;color:var(--muted);margin-bottom:7px}
+.node .t{font-size:14px;font-weight:650;margin-bottom:5px}
+.node .d{font-size:12px;color:var(--muted);line-height:1.55}
+.node .badge{
+  position:absolute;top:-1px;right:-1px;font-size:10px;padding:2px 7px;
+  border-radius:0 11px 0 8px;background:var(--accent-soft);color:var(--accent);
+  font-weight:600;letter-spacing:.02em;
+}
+.arrow{
+  flex:0 0 34px;display:flex;align-items:center;justify-content:center;
+  color:#c2cfe4;font-size:15px;
+}
+.pipe-note{
+  margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+  font-size:13px;color:var(--muted);line-height:1.75;
+}
+.pipe-note b{color:var(--ink2)}
+
+/* ---------- 看板卡 ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(304px,1fr));gap:20px}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  overflow:hidden;box-shadow:var(--shadow);
+  transition:transform .22s cubic-bezier(.22,.61,.36,1),box-shadow .22s,border-color .22s;
+  display:flex;flex-direction:column;
+}
+.card:hover{transform:translateY(-3px);border-color:#c9d6ea;
+  box-shadow:0 2px 4px rgba(15,23,42,.04),0 18px 40px -18px rgba(15,23,42,.3)}
+.thumb{position:relative;aspect-ratio:16/10.4;background:#eef2f8;overflow:hidden;border-bottom:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;transition:transform .5s}
+.card:hover .thumb img{transform:scale(1.025)}
+.thumb .tag{
+  position:absolute;top:10px;left:10px;font-size:10.5px;font-weight:600;
+  letter-spacing:.06em;padding:3px 9px;border-radius:6px;
+  background:rgba(13,21,38,.82);color:#dbe6f8;backdrop-filter:blur(4px);
+}
+.thumb .live{
+  position:absolute;top:10px;right:10px;font-size:10.5px;font-weight:600;
+  padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.94);
+  color:var(--teal);display:flex;align-items:center;gap:5px;
+}
+.thumb .live i{width:5px;height:5px;border-radius:50%;background:var(--teal);display:block}
+.card-body{padding:16px 17px 18px;flex:1;display:flex;flex-direction:column}
+.card-body h3{font-size:15.5px;font-weight:650;margin-bottom:7px;letter-spacing:-.01em}
+.card-body h3 span{font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.03em}
+.card-body p{font-size:13px;color:var(--muted);line-height:1.68;flex:1}
+.card-body .go{
+  margin-top:13px;font-size:12.5px;font-weight:600;color:var(--accent);
+  display:flex;align-items:center;gap:5px;
+}
+.card-body .go::after{content:"→";transition:transform .2s}
+.card:hover .card-body .go::after{transform:translateX(3px)}
+
+/* ---------- 表格 ---------- */
+.tbl-wrap{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  overflow:hidden;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:14px 18px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#f8fafd;font-weight:650;font-size:12px;letter-spacing:.05em;
+  color:var(--ink2);text-transform:uppercase;white-space:nowrap}
+td:first-child{font-weight:600;color:var(--ink);width:31%}
+td{color:var(--muted);line-height:1.7}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafcff}
+
+/* ---------- 技术栈 ---------- */
+.stack{display:flex;flex-wrap:wrap;gap:9px}
+.chip{
+  font-size:12.5px;padding:7px 14px;border-radius:100px;
+  background:var(--card);border:1px solid var(--line);color:var(--ink2);
+  font-weight:500;box-shadow:0 1px 1px rgba(15,23,42,.03);
+}
+.chip.key{background:var(--accent-soft);border-color:#c9dbff;color:var(--accent);font-weight:600}
+
+/* ---------- 说明块 ---------- */
+.note{
+  background:linear-gradient(180deg,#fffaf0,#fffdf8);
+  border:1px solid #f2d9a8;border-radius:14px;padding:22px 24px;
+}
+.note h4{font-size:14.5px;margin-bottom:11px;color:#8a5a10;display:flex;align-items:center;gap:8px}
+.note ul{list-style:none;display:grid;gap:7px}
+.note li{font-size:13px;color:#7a5c22;line-height:1.7;padding-left:16px;position:relative}
+.note li::before{content:"";position:absolute;left:3px;top:9px;width:4px;height:4px;
+  border-radius:50%;background:#d0a45a}
+
+/* ---------- 页脚 ---------- */
+footer{border-top:1px solid var(--line);padding:34px 0 46px;background:#fff}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  font-size:12.5px;color:var(--muted);line-height:1.9}
+footer b{color:var(--ink2);font-weight:600}
+
+@media(max-width:700px){
+  .hero .wrap{padding:52px 20px 44px}
+  section{padding:46px 0}
+  .grid{grid-template-columns:1fr;gap:16px}
+  th,td{padding:11px 13px}
+  td:first-child{width:auto}
+  table{font-size:12.5px}
+  .pipe-row{min-width:0;flex-direction:column}
+  .arrow{flex:0 0 24px}
+  .arrow::before{content:"↓";}
+  .arrow span{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow"><i></i>Data Engineering · Portfolio 2026</div>
+    <h1>把散落在 Excel 里的业务数据<br><em>变成每天自动上线的决策看板</em></h1>
+    <p class="lede">
+      一套面向销售团队的数据运营系统：从企业 BI 取数、Excel 公式重算、指标口径计算，
+      到静态看板生成、指纹判变发布、企业微信群推送——<b>全链路无人值守</b>。
+      覆盖活动量考核、组织健康度诊断、通话质检评分三条业务线，累计支撑百人级团队日常经营。
+    </p>
+    <div class="stats">
+      <div class="stat"><b>9</b><span>在线看板页面</span></div>
+      <div class="stat"><b>827</b><span>通话质检样本</span></div>
+      <div class="stat"><b>100s</b><span>单次全量流水线</span></div>
+      <div class="stat"><b>4</b><span>自动化阶段</span></div>
+      <div class="stat"><b>0</b><span>需人工干预环节</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= 流水线 ================= -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no">01 / 系统架构</span>
+      <h2>四阶段数据流水线
+        <small>单次全量执行约 100 秒；无数据变化时约 20 秒判定跳过，不产生任何构建与发布开销。</small>
+      </h2>
+    </div>
+
+    <div class="pipe">
+      <div class="pipe-row">
+        <div class="node">
+          <div class="k">STAGE 01</div>
+          <div class="t">BI 取数</div>
+          <div class="d">并发下载 12 张报表，登录态复用，失败重试与增量落盘</div>
+          <div class="badge">~19s</div>
+        </div>
+        <div class="arrow"><span>→</span></div>
+        <div class="node">
+          <div class="k">STAGE 02</div>
+          <div class="t">Excel 重算</div>
+          <div class="d">WPS COM 整块写入，触发 2.8 万个公式重算，保留透视表缓存</div>
+          <div class="badge">~14s</div>
+        </div>
+        <div class="arrow"><span>→</span></div>
+        <div class="node">
+          <div class="k">STAGE 03</div>
+          <div class="t">解析与构建</div>
+          <div class="d">多 Sheet 协同解析 → 口径计算 → 生成 7 个页面 + JSON 数据层</div>
+          <div class="badge">~57s</div>
+        </div>
+        <div class="arrow"><span>→</span></div>
+        <div class="node">
+          <div class="k">STAGE 04</div>
+          <div class="t">判变与发布</div>
+          <div class="d">SHA256 内容指纹比对，有变化才上传，发布后自动线上核验</div>
+          <div class="badge">~7s</div>
+        </div>
+      </div>
+
+      <div class="pipe-note">
+        <b>核心设计：指纹驱动的零成本判变。</b>
+        所有产物规范化后计算 <code>SHA256</code>，与上次发布指纹比对，一致则整段跳过。
+        配合退出码语义（<code>23 = DEPLOY</code> / <code>0 = SKIP</code>），调度器无需解析日志即可决策，
+        避免重复上传与无谓算力消耗。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 看板矩阵 ================= -->
+<section style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no">02 / 在线看板</span>
+      <h2>九个可交互页面，全部功能真实可用
+        <small>筛选、排序、搜索、图表联动、Tab 切换、历史趋势查询均可点击操作。数据已脱敏，人名与数值全部虚构。</small>
+      </h2>
+    </div>
+
+    <div class="grid">
+
+      <a class="card" href="demo/index.html">
+        <div class="thumb">
+          <img src="thumbs/activity.jpg" alt="活动量看板" loading="lazy">
+          <span class="tag">核心看板</span><span class="live"><i></i>交互</span>
+        </div>
+        <div class="card-body">
+          <h3>活动量看板 <span>Activity Board</span></h3>
+          <p>KPI 总览、事业部/部门过程量、全员明细（总表 / 法律日达标 / 会计达标 / 资质达标四套 Tab）、图表分析、历史趋势。</p>
+          <span class="go">打开看板</span>
+        </div>
+      </a>
+
+      <a class="card" href="demo/sanli.html">
+        <div class="thumb">
+          <img src="thumbs/sanli.jpg" alt="员工三力看板" loading="lazy">
+          <span class="tag">人力结构</span><span class="live"><i></i>交互</span>
+        </div>
+        <div class="card-body">
+          <h3>员工三力 <span>Three-Force</span></h3>
+          <p>英雄 / 标准 / 破零 / 无效四层人力分级，支持按事业部下钻，直接对应激励政策判定。</p>
+          <span class="go">打开看板</span>
+        </div>
+      </a>
+
+      <a class="card" href="demo/health.html">
+        <div class="thumb">
+          <img src="thumbs/health.jpg" alt="经营健康度看板" loading="lazy">
+          <span class="tag">组织诊断</span><span class="live"><i></i>交互</span>
+        </div>
+        <div class="card-body">
+          <h3>经营健康度看板 <span>Org Health</span></h3>
+          <p>四大经营模式统一打分：指标口径规则库、复合健康分、多级下钻对比、红黄绿三色达标判定。</p>
+          <span class="go">打开看板</span>
+        </div>
+      </a>
+
+      <a class="card" href="demo/callqa.html">
+        <div class="thumb">
+          <img src="thumbs/callqa.jpg" alt="通话质检看板" loading="lazy">
+          <span class="tag">AI 质检</span><span class="live"><i></i>交互</span>
+        </div>
+        <div class="card-body">
+          <h3>通话质检评分 <span>Call QA</span></h3>
+          <p>827 条录音增量转写，按五维（开场介绍 / 痛点价值 / 需求挖掘 / 异议处理 / 加微埋点）自动打分并给出改进建议。</p>
+          <span class="go">打开看板</span>
+        </div>
+      </a>
+
+      <a class="card" href="demo/ry.html">
+        <div class="thumb">
+          <img src="thumbs/wangxiao.jpg" alt="网销数据分析" loading="lazy">
+          <span class="tag">过程量</span><span class="live"><i></i>交互</span>
+        </div>
+        <div class="card-body">
+          <h3>网销数据分析 <span>Online Sales</span></h3>
+          <p>网销漏斗逐人逐环节拆解：资源 → 拨打 → 接通 → 加微 → 见客，定位转化断点。</p>
+          <span class="go">打开看板</span>
+        </div>
+      </a>
+
+      <a class="card" href="demo/ry_dy.html">
+        <div class="thumb">
+          <img src="thumbs/dianyao.jpg" alt="电邀数据分析" loading="lazy">
+          <span class="tag">过程量</span><span class="live"><i></i>交互</span>
+        </div>
+        <div class="card-body">
+          <h3>电邀数据分析 <span>Outbound</span></h3>
+          <p>电话邀约过程量追踪，通时、拨打、接通三率联动，按日/周考核口径分列。</p>
+          <span class="go">打开看板</span>
+        </div>
+      </a>
+
+      <a class="card" href="demo/ry_kuaiji.html">
+        <div class="thumb">
+          <img src="thumbs/kuaiji.jpg" alt="会计数据分析" loading="lazy">
+          <span class="tag">过程量</span><span class="live"><i></i>交互</span>
+        </div>
+        <div class="card-body">
+          <h3>会计数据分析 <span>Accounting</span></h3>
+          <p>财务侧活动量考核，含票据抽检与个人出错率统计，独立数据通道挂载。</p>
+          <span class="go">打开看板</span>
+        </div>
+      </a>
+
+      <a class="card" href="demo/yj.html">
+        <div class="thumb">
+          <img src="thumbs/yeji.jpg" alt="业绩含续费" loading="lazy">
+          <span class="tag">经营结果</span><span class="live"><i></i>交互</span>
+        </div>
+        <div class="card-body">
+          <h3>业绩含续费 <span>Revenue</span></h3>
+          <p>新签与续费合并口径的收入看板，支持事业部、团队、个人三级下钻与环比。</p>
+          <span class="go">打开看板</span>
+        </div>
+      </a>
+
+      <a class="card" href="demo/sku.html">
+        <div class="thumb">
+          <img src="thumbs/sku.jpg" alt="订单商品明细" loading="lazy">
+          <span class="tag">明细穿透</span><span class="live"><i></i>交互</span>
+        </div>
+        <div class="card-body">
+          <h3>订单商品明细 <span>Order SKU</span></h3>
+          <p>订单级明细穿透查询，支持多条件组合筛选与分页，用于业绩归因核对。</p>
+          <span class="go">打开看板</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- ================= 难点 ================= -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no">03 / 工程难点</span>
+      <h2>真实踩过的坑，比代码更能说明问题
+        <small>以下每一条都在生产环境真实发生过，解决方案经过验证。</small>
+      </h2>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>问题现象</th><th>根因与解决</th></tr></thead>
+        <tbody>
+        <tr>
+          <td>看板读到的指标全是 <code>None</code></td>
+          <td>源表含 <b>2.8 万个公式</b>与 9 张透视表，其中约 700 个 XLOOKUP 跨表引用。openpyxl 读写会<b>丢失公式缓存值</b>。改为 WPS COM 整块写入并等待句柄释放，公式实时重算。</td>
+        </tr>
+        <tr>
+          <td>手动运行正常，计划任务必定失败</td>
+          <td>Windows 计划任务以高完整性（High IL）运行时不读取 <code>HKCU</code> 用户级注册表，而 WPS 只把 Excel COM 类注册在 HKCU。试过降权重启、<code>CreateProcessAsUser</code>、经 explorer 启动三条路均无效；最终方案是启动时<b>自愈</b>——把 ProgID / CLSID / LocalServer32 补写进 <code>HKLM</code>。</td>
+        </tr>
+        <tr>
+          <td>某事业部员工在看板上「消失」</td>
+          <td>主表 sheet 只含 4 个事业部 22 人，会计 16 人不在其中——不是 bug，是数据源结构如此。为该板块<b>单独挂载数据通道</b>，前端按数据存在性自动显隐。</td>
+        </tr>
+        <tr>
+          <td>周合格率虚高 40%</td>
+          <td>「当日是否达标」与「滚动周活动量合格」是两套独立口径。周合格率分母<b>只能算正常考核人员</b>（会计 16 人中 5 人不考核活动量）。前端显式标注口径，双口径绝不混算。</td>
+        </tr>
+        <tr>
+          <td>页面加载后偶发整页空白</td>
+          <td>数据层字段被裁剪后，前端读 <code>undefined</code> 抛错中断渲染。确立规则：<b>敏感字段置空而非删除</b>，保持数据结构契约稳定；同时页面内嵌兜底数据，<code>fetch</code> 失败自动降级，永不白屏。</td>
+        </tr>
+        <tr>
+          <td>发布链接换账号即失效</td>
+          <td>静态托管的分享链接绑定发布账号。旧链接一旦公开<b>无法完全回收</b>——这是所有公开演示必须先做全量脱敏的根本原因。</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 相关工程 ================= -->
+<section style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no">04 / 配套工程</span>
+      <h2>看板之外，支撑它运转的两套系统
+        <small>两者均为内部工具，实现说明见仓库文档，不含在线演示。</small>
+      </h2>
+    </div>
+    <div class="grid">
+      <div class="card" style="cursor:default">
+        <div class="card-body" style="padding:22px">
+          <h3>ReportFlow · BI 报表自动化流水线</h3>
+          <p>BI 系统登录取数 → 跨表 Sheet 复制 → HTML 导出与后处理 → Web 目录发布。
+             含可视化配置编辑器（Tkinter）、任务调度器、COM 引擎进程管理与磁盘清理策略。
+             解决「每天手工下载 10 张报表再复制粘贴」的重复劳动。</p>
+          <div class="stack" style="margin-top:14px">
+            <span class="chip">Selenium</span><span class="chip">pywin32 COM</span>
+            <span class="chip">TOML 配置</span><span class="chip">Tkinter GUI</span>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="cursor:default">
+        <div class="card-body" style="padding:22px">
+          <h3>BriefKit · 企微数据战报机器人</h3>
+          <p>把看板数据渲染成图片 + 文案，定点推送到企业微信群。三条独立链路（活动量 / 三力 / PK），
+             支持测试群灰度、发送结果校验、失败只报错不重试（避免重复刷屏）。</p>
+          <div class="stack" style="margin-top:14px">
+            <span class="chip">Playwright 截图</span><span class="chip">Webhook</span>
+            <span class="chip">Markdown 渲染</span><span class="chip">定时任务</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 技术栈 ================= -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no">05 / 技术栈</span>
+      <h2>选型原则：够用、可迁移、零运行时依赖</h2>
+    </div>
+    <div class="stack">
+      <span class="chip key">Python 3.11</span>
+      <span class="chip key">openpyxl</span>
+      <span class="chip key">WPS / Excel COM 自动化</span>
+      <span class="chip key">ECharts 5</span>
+      <span class="chip">原生 HTML/CSS/JS</span>
+      <span class="chip">Windows 计划任务</span>
+      <span class="chip">SHA256 指纹判变</span>
+      <span class="chip">静态托管 / 对象存储</span>
+      <span class="chip">Selenium</span>
+      <span class="chip">腾讯云 ASR</span>
+      <span class="chip">LLM 结构化评分</span>
+      <span class="chip">企业微信 Webhook</span>
+    </div>
+
+    <div class="note" style="margin-top:26px">
+      <h4>为什么不引入 React / Vue</h4>
+      <ul>
+        <li>数据规模小（百人级）、页面数量少（9 个），引入构建链反而增加部署复杂度</li>
+        <li>核心诉求是「<b>单文件可独立运行、可离线归档、可任意转发</b>」——纯静态 HTML 天然满足</li>
+        <li>页面内嵌数据兜底 + JSON 外挂，<code>fetch</code> 失败自动降级，弱网与断网都能打开</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 脱敏 ================= -->
+<section style="background:#fff;border-top:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no">06 / 数据脱敏</span>
+      <h2>公开演示版做了什么处理</h2>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>对象</th><th>处理方式</th></tr></thead>
+        <tbody>
+        <tr><td>员工姓名</td><td>确定性哈希映射为虚构姓名（同一人始终对应同一化名），共处理 174 个身份</td></tr>
+        <tr><td>工号</td><td>重新编号为 <code>100000+</code> 区段，保证不与原号冲突</td></tr>
+        <tr><td>组织架构</td><td>事业部 / 部门名改为通用名称，剥离城市与公司标识</td></tr>
+        <tr><td>客户信息</td><td>客户公司全称替换为「示例客户 NNN 公司」，合同号 / 订单号替换为占位符</td></tr>
+        <tr><td>通话数据</td><td><b>音频地址、转写正文、分段文本全部清空</b>，仅保留评分维度与结论</td></tr>
+        <tr><td>基础资源</td><td>密钥、账号、内网域名、本机绝对路径、对象存储桶名全部剔除</td></tr>
+        <tr><td>历史留档</td><td>裁剪至最近 7 天，逐日同样脱敏</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:18px;font-size:13px;color:var(--muted);line-height:1.8">
+      脱敏采用<b>结构化字段处理 + 全文本全局替换</b>双层机制：先按字段名对 JSON 做结构化映射，
+      再对所有文本（含 HTML 注释、内嵌兜底数据块、深层嵌套数组）做姓名全集替换，
+      避免只处理表层而漏掉嵌套结构。脱敏脚本与校验脚本一并入库，可复现。
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <b>SalesPulse · 销售运营数据中台</b><br>
+      个人工作成果展示 · 演示数据全部虚构
+    </div>
+    <div style="text-align:right">
+      业务口径与考核规则归原单位所有<br>
+      代码以 MIT 协议开源
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
