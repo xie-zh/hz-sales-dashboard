@@ -59,22 +59,15 @@
 
 ---
 
-## 三、三个子系统
+## 三、两个子系统
 
-仓库包含三套可独立运行的系统，共用同一套数据口径与部署约定。
+仓库包含两套可独立运行的系统，共用同一套数据口径与部署约定。
 
 ### 1. SalesPulse Dashboard —— 数据看板主体
 
 `src/` + `demo/`。四阶段流水线，9 个业务看板 + 1 个聚合导航门户，单文件 HTML 可离线分发。
 
-### 2. ReportFlow —— BI 报表自动化流水线
-
-`modules/reportflow/`。BI 系统登录取数 → 跨表 Sheet 复制 → HTML 导出与后处理 → Web 目录发布。
-
-含可视化配置编辑器（Tkinter）、任务调度器、COM 引擎进程管理、磁盘清理策略。
-把「每天手工下载 10 张报表再复制粘贴」压缩成一次双击。
-
-### 3. BriefKit —— 企微数据战报机器人
+### 2. BriefKit —— 企微数据战报机器人
 
 `modules/briefkit/`。把看板数据渲染成图片 + 文案，定点推送到企业微信群。
 
@@ -94,6 +87,7 @@
 | 调度 | Windows 计划任务 | 免安装、免常驻、崩溃不影响下次 |
 | 部署 | 静态托管 + 对象存储 | 成本低、覆盖式发布保持链接稳定 |
 | 语音转写 | 腾讯云 ASR | 长音频、中文识别准确率满足要求 |
+| 网页取数 | Playwright | 需要真实登录态与异步渲染页面 |
 
 **为什么不用 React / Vue**：数据量小（百人级）、页面数量少（9 个），且核心诉求是「单文件可独立运行、可离线归档、可任意转发」，引入构建链反而增加部署复杂度。
 
@@ -222,7 +216,6 @@ Windows 计划任务以高完整性（High IL）运行时**不读取 HKCU 用户
 │       ├── nav_router.py           导航页重定向
 │       └── setup_new_machine.py    新机器 9 步初始化
 ├── modules/
-│   ├── reportflow/             BI 报表自动化流水线
 │   └── briefkit/               企微数据战报机器人
 ├── docs/
 │   ├── 架构说明.md              原理与设计决策详解
@@ -271,7 +264,7 @@ python src/ops/setup_new_machine.py --yes  # 新机器 9 步初始化
 
 ## 十、技术栈
 
-Python 3.11 · openpyxl · WPS/Excel COM 自动化 · Selenium · Windows 计划任务 · ECharts 5 · 原生 JS · SHA256 指纹判变 · 腾讯云 ASR · LLM 结构化评分 · 企业微信 Webhook · 静态托管
+Python 3.11 · openpyxl · WPS/Excel COM 自动化 · Playwright · Windows 计划任务 · ECharts 5 · 原生 JS · SHA256 指纹判变 · 腾讯云 ASR · LLM 结构化评分 · 企业微信 Webhook · 静态托管
 
 ---
 
