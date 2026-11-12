@@ -1,0 +1,65 @@
+/* ============================================================================
+   风格 A · Apple 极简白
+   大留白、超大字重对比、克制动效、产品级图片占位。安静、贵、不炫技。
+   ============================================================================ */
+:root {
+  --bg:            #ffffff;
+  --bg-alt:        #f5f5f7;
+  --surface:       #ffffff;
+  --surface-2:     #fafafa;
+  --ink:           #1d1d1f;
+  --ink-soft:      #424245;
+  --muted:         #86868b;
+  --line:          #e5e5ea;
+  --accent:        #0071e3;
+  --accent-2:      #0077ed;
+  --accent-ink:    #ffffff;
+  --accent-soft:   #e8f2fd;
+  --radius:        18px;
+  --radius-sm:     12px;
+  --shadow:        0 1px 2px rgba(0,0,0,.04), 0 8px 30px -18px rgba(0,0,0,.20);
+  --shadow-lift:   0 2px 6px rgba(0,0,0,.05), 0 22px 44px -22px rgba(0,0,0,.30);
+  --hero-bg:       radial-gradient(1100px 520px at 50% -12%, #f0f4fb 0%, #ffffff 68%);
+  --nav-bg:        rgba(255,255,255,.80);
+  --nav-border:    1px solid rgba(0,0,0,.06);
+  --font:          "SF Pro Display","PingFang SC","Helvetica Neue","Microsoft YaHei",system-ui,sans-serif;
+  --hero-size:     clamp(42px, 6.6vw, 88px);
+  --hero-weight:   700;
+  --hero-track:    -.035em;
+  --section-gap:   72px;
+  --maxw:          1180px;
+  --grid-line:     transparent;
+}
+
+/* Hero：居中大标题，极浅背景，无网格 */
+.hero { text-align: center; }
+.hero-inner { max-width: 1080px; margin: 0 auto; }
+/* Hero 标识条：去掉胶囊底色，只留一行灰字（用户要求：越素越高级） */
+.hero-eyebrow {
+  letter-spacing: .06em; font-size: 13.5px; font-weight: 500; color: #8e8e93;
+  background: none; border: 0; border-radius: 0; padding: 0;
+}
+.hero-eyebrow::before { content: none; }
+.hero-eyebrow b { font-weight: 700; color: #6e6e73; }
+.hero-eyebrow i { font-style: normal; opacity: .5; margin: 0 1px; }
+.hero-title { letter-spacing: var(--hero-track); }
+.hero-title .hl { color: var(--accent); }
+.hero-sub { font-size: clamp(16px,1.55vw,21px); color: var(--ink-soft); max-width: 700px; margin: 0 auto 34px; }
+.hero-actions { justify-content: center; }
+.hero-visual {
+  background: linear-gradient(160deg,#f5f7fb,#e9eef6 52%,#f7f9fc);
+  border: 1px solid var(--line);
+  box-shadow: 0 30px 80px -40px rgba(0,0,0,.28);
+}
+.hero-visual::after { display: none; }
+
+.btn-primary { border-radius: 980px; padding: 13px 26px; font-weight: 500; }
+.btn-ghost   { border-radius: 980px; padding: 13px 24px; border: 1px solid var(--line); }
+.card        { border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface); }
+.metric      { border-right: 1px solid var(--line); }
+.metric:last-child { border-right: 0; }
+.metric b    { font-size: clamp(34px,4vw,52px); font-weight: 600; letter-spacing: -.03em; }
+.section-title { font-size: clamp(28px,3.6vw,48px); font-weight: 600; letter-spacing: -.028em; }
+.section-kicker { font-size: 12px; letter-spacing: .18em; color: var(--muted); text-transform: uppercase; }
+.nav-link::after { background: var(--accent); height: 1.5px; }
+.cta-band { background: var(--bg-alt); border-radius: 28px; }

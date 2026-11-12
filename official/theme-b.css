@@ -1,0 +1,93 @@
+/* ============================================================================
+   风格 B · Stripe / Linear 深色科技
+   深色底 + 渐变光晕 + 细网格 + 精细微动效。技术感强，偏互联网大厂官网。
+   ============================================================================ */
+:root {
+  --bg:            #080b14;
+  --bg-alt:        #0c111d;
+  --surface:       #111827;
+  --surface-2:     #151d2e;
+  --ink:           #f2f5fb;
+  --ink-soft:      #c3cddd;
+  --muted:         #8492a9;
+  --line:          rgba(255,255,255,.10);
+  --accent:        #6d8dff;
+  --accent-2:      #45d6c4;
+  --accent-ink:    #071022;
+  --accent-soft:   rgba(109,141,255,.14);
+  --radius:        14px;
+  --radius-sm:     10px;
+  --shadow:        0 1px 0 rgba(255,255,255,.04), 0 18px 48px -24px rgba(0,0,0,.80);
+  --shadow-lift:   0 0 0 1px rgba(109,141,255,.28), 0 26px 60px -26px rgba(45,86,220,.55);
+  --hero-bg:
+    radial-gradient(900px 480px at 76% -8%, rgba(109,141,255,.34), transparent 62%),
+    radial-gradient(680px 380px at 8% 24%, rgba(69,214,196,.18), transparent 60%),
+    linear-gradient(160deg,#080b14 0%,#0b1120 58%,#080b14 100%);
+  --nav-bg:        rgba(8,11,20,.72);
+  --nav-border:    1px solid rgba(255,255,255,.08);
+  --font:          "Inter","SF Pro Display","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --hero-size:     clamp(42px, 6.2vw, 82px);
+  --hero-weight:   680;
+  --hero-track:    -.04em;
+  --section-gap:   104px;
+  --maxw:          1200px;
+  --grid-line:     rgba(255,255,255,.035);
+}
+
+body { color: var(--ink); }
+/* 细网格背景（#073 视差的远层） */
+.site-bg {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(circle at 50% 0%, #000 6%, transparent 76%);
+  mask-image: radial-gradient(circle at 50% 0%, #000 6%, transparent 76%);
+}
+.hero-inner { max-width: 1080px; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; letter-spacing: .18em; font-weight: 600; color: #9fb6ff;
+  border: 1px solid rgba(159,182,255,.28); background: rgba(109,141,255,.08);
+  border-radius: 100px; padding: 5px 14px;
+}
+.hero-title { letter-spacing: var(--hero-track); }
+.hero-title .hl {
+  background: linear-gradient(96deg,#a9c2ff,#e2ecff 48%,#8fe6d8);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hero-sub { color: var(--ink-soft); font-size: clamp(15px,1.5vw,19px); max-width: 620px; }
+.hero-visual {
+  background: linear-gradient(150deg,#111a2e,#0d1424 60%,#131c30);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 40px 100px -50px rgba(80,120,255,.55), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.hero-visual::after {
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background: radial-gradient(420px 220px at 72% 12%, rgba(109,141,255,.18), transparent 70%);
+}
+.btn-primary {
+  border-radius: 9px; padding: 12px 24px; font-weight: 600;
+  background: linear-gradient(180deg,#8aa5ff,#5b7cf5); color: #06102a;
+  box-shadow: 0 8px 26px -10px rgba(91,124,245,.9);
+}
+.btn-ghost { border-radius: 9px; padding: 12px 22px; border: 1px solid rgba(255,255,255,.18); color: var(--ink); background: rgba(255,255,255,.03); }
+.card {
+  border-radius: var(--radius); border: 1px solid var(--line);
+  background: linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+  backdrop-filter: blur(8px);
+}
+.metric { border-right: 1px solid var(--line); }
+.metric:last-child { border-right: 0; }
+.metric b { font-size: clamp(32px,3.8vw,50px); font-weight: 680; letter-spacing: -.035em; }
+.section-title { font-size: clamp(28px,3.4vw,46px); font-weight: 660; letter-spacing: -.032em; }
+.section-kicker { font-size: 11px; letter-spacing: .2em; color: #8fa6e8; text-transform: uppercase; }
+.nav-link::after { background: linear-gradient(90deg,var(--accent),var(--accent-2)); height: 2px; }
+.cta-band {
+  background: linear-gradient(120deg,rgba(109,141,255,.14),rgba(69,214,196,.09));
+  border: 1px solid rgba(109,141,255,.22); border-radius: 22px;
+}
+.skeleton { background: rgba(255,255,255,.07); }
+.skeleton::after { background: linear-gradient(90deg,transparent,rgba(255,255,255,.09),transparent); }
+.empty { border-color: rgba(255,255,255,.12); background: rgba(255,255,255,.02); }

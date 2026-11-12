@@ -1,0 +1,80 @@
+/* ============================================================================
+   风格 C · Microsoft / IBM 企业蓝
+   稳重结构化、卡片矩阵、清晰层级、蓝色系。可信度最高，偏大型企业介绍页。
+   ============================================================================ */
+:root {
+  --bg:            #ffffff;
+  --bg-alt:        #f3f6fb;
+  --surface:       #ffffff;
+  --surface-2:     #f8fafd;
+  --ink:           #0f1c2e;
+  --ink-soft:      #35455c;
+  --muted:         #63748d;
+  --line:          #dfe6f0;
+  --accent:        #0f5ad5;
+  --accent-2:      #0b7bc4;
+  --accent-ink:    #ffffff;
+  --accent-soft:   #e9f1fd;
+  --radius:        4px;
+  --radius-sm:     3px;
+  --shadow:        0 1px 2px rgba(15,28,46,.06), 0 6px 18px -12px rgba(15,28,46,.28);
+  --shadow-lift:   0 2px 4px rgba(15,28,46,.07), 0 16px 34px -18px rgba(15,28,46,.36);
+  --hero-bg:       linear-gradient(112deg,#071d3d 0%,#0b3c86 52%,#0f5ad5 100%);
+  --nav-bg:        #ffffff;
+  --nav-border:    1px solid var(--line);
+  --font:          "Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --hero-size:     clamp(38px, 5.2vw, 68px);
+  --hero-weight:   650;
+  --hero-track:    -.018em;
+  --section-gap:   88px;
+  --maxw:          1220px;
+  --grid-line:     rgba(255,255,255,.07);
+}
+
+/* Hero：深蓝实底 + 左对齐，稳重的企业官网形态 */
+.hero {
+  background: var(--hero-bg); color: #fff; text-align: left;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: linear-gradient(90deg,transparent 30%,#000 100%);
+  mask-image: linear-gradient(90deg,transparent 30%,#000 100%);
+}
+.hero-inner { max-width: var(--maxw); position: relative; z-index: 1; }
+.hero-eyebrow {
+  font-size: 11.5px; letter-spacing: .16em; font-weight: 700; color: #9dc2ff;
+  text-transform: uppercase; border-left: 3px solid #4d9bff; padding-left: 12px;
+}
+.hero-title { letter-spacing: var(--hero-track); max-width: 1000px; color: #fff; }
+.hero-title .hl { color: #7fc0ff; }
+.hero-sub { color: #c9dbf5; font-size: clamp(15px,1.4vw,18px); max-width: 580px; }
+.hero-actions { justify-content: flex-start; }
+.hero-visual {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.20);
+  box-shadow: 0 30px 70px -40px rgba(0,0,0,.6);
+  backdrop-filter: blur(6px);
+}
+.hero-visual::after { display:none; }
+.hero .btn-primary { background:#fff; color:#0b3c86; border-radius:3px; padding:13px 26px; font-weight:650; }
+.hero .btn-ghost { border:1px solid rgba(255,255,255,.5); color:#fff; background:transparent; border-radius:3px; padding:13px 24px; }
+.hero .skeleton { background: rgba(255,255,255,.12); }
+.hero .skeleton::after { background: linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent); }
+
+.btn-primary { border-radius: 3px; padding: 12px 24px; font-weight: 650; background: var(--accent); color:#fff; }
+.btn-ghost { border-radius: 3px; padding: 12px 22px; border:1px solid var(--line); color:var(--ink); background:#fff; }
+.card { border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface); }
+.card-accent { border-top: 3px solid var(--accent); }
+.metric { border-right: 1px solid var(--line); }
+.metric:last-child { border-right: 0; }
+.metric b { font-size: clamp(32px,3.6vw,48px); font-weight: 650; letter-spacing: -.025em; color: var(--accent); }
+.section-title { font-size: clamp(26px,3.1vw,42px); font-weight: 650; letter-spacing: -.018em; }
+.section-kicker { font-size: 11.5px; letter-spacing: .14em; color: var(--accent); text-transform: uppercase; font-weight: 700; }
+.nav-link::after { background: var(--accent); height: 2px; }
+.cta-band { background: var(--bg-alt); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 2px; }
+.section-alt { background: var(--bg-alt); }

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>顶呱呱杭州分公司 · 员工通道</title>
+<link rel="stylesheet" href="base.css">
+<script src="site.config.js"></script>
+<style>
+/* ============================================================================
+   员工通道 v3 · 侧栏导航 + 轮播 + 公告（版式参考看板导航页）
+   // Motion Prompt #074 · MIT License (c) 2026 Shohei Ohtaki · 滚动淡入
+   // Motion Prompt #081 · MIT License (c) 2026 Shohei Ohtaki · 悬停抬升
+   // https://showheyohtaki.github.io/motion-prompt/
+   ============================================================================ */
+.head-wide{max-width:1460px;padding:0 24px}
+
+/* ------------------------------------------------ 两栏骨架 */
+.portal{display:flex;align-items:flex-start;max-width:1460px;margin:0 auto;padding:0 24px}
+.pside{
+  position:sticky;top:62px;flex:0 0 236px;width:236px;height:calc(100vh - 62px);
+  display:flex;flex-direction:column;padding:24px 16px 16px 0;
+  border-right:1px solid #e5e5ea;
+}
+.pmain{flex:1;min-width:0;padding:24px 0 56px 26px}
+
+/* ------------------------------------------------ 侧栏 */
+.ps-brand{display:flex;align-items:center;gap:10px;padding:0 4px 18px}
+.ps-logo{
+  width:38px;height:38px;border-radius:11px;flex:none;
+  background:linear-gradient(140deg,var(--accent),#3b9bf0);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;letter-spacing:.05em;
+  box-shadow:0 6px 16px -8px rgba(0,113,227,.9);
+}
+.ps-brand-txt b{display:block;font-size:14.5px;font-weight:650;letter-spacing:-.01em;line-height:1.3}
+.ps-brand-txt em{display:block;font-style:normal;font-size:9px;letter-spacing:.16em;color:var(--muted);margin-top:3px}
+
+.ps-search{
+  display:flex;align-items:center;gap:8px;padding:9px 11px;margin-bottom:14px;
+  border:1px solid #e5e5ea;border-radius:9px;background:var(--surface-2);
+  transition:background .2s,border-color .2s,box-shadow .2s;
+}
+.ps-search:focus-within{background:var(--surface);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.ps-ic{font-size:14px;color:var(--muted);flex:none}
+.ps-search input{flex:1;min-width:0;border:0;background:none;outline:0;font-size:12.5px;font-family:inherit;color:var(--ink)}
+.ps-search input::placeholder{color:var(--muted)}
+
+.ps-nav{flex:1;min-height:0;overflow-y:auto;display:grid;gap:2px;align-content:start;scrollbar-width:thin}
+.nv{
+  display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;
+  font-size:12.5px;color:var(--ink-soft);text-align:left;
+  transition:background .18s,color .18s,box-shadow .18s;
+}
+.nv:hover{background:var(--surface-2);color:var(--ink)}
+.nv.on{background:var(--accent);color:#fff;font-weight:600;box-shadow:0 6px 16px -8px rgba(0,113,227,.9)}
+.nv-ic{width:16px;text-align:center;font-size:12px;flex:none}
+.nv-tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nv-n{font-size:10.5px;opacity:.6;font-variant-numeric:tabular-nums;flex:none}
+.nv.on .nv-n{opacity:.9}
+
+.ps-foot{padding-top:14px;border-top:1px solid #e5e5ea;display:flex;gap:18px}
+.ps-foot div b{display:block;font-size:17px;font-weight:650;line-height:1.2;font-variant-numeric:tabular-nums}
+.ps-foot div span{font-size:10px;color:var(--muted);white-space:nowrap}
+
+/* ------------------------------------------------ 主区标题 */
+.pm-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:18px}
+.pm-kicker{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:650;margin-bottom:7px}
+.pm-head h1{font-size:clamp(22px,2.4vw,30px);margin:0;font-weight:650;letter-spacing:-.02em}
+.pm-meta{font-size:12px;color:var(--muted);white-space:nowrap;padding-bottom:3px}
+
+/* ------------------------------------------------ 轮播 + 公告 */
+.pm-top{display:grid;grid-template-columns:minmax(0,1fr) 312px;gap:16px;margin-bottom:28px}
+.banner{position:relative;overflow:hidden;border-radius:var(--radius);background:var(--surface-2);aspect-ratio:16/7;min-height:250px}
+.bn-track{display:flex;height:100%;transition:transform .6s cubic-bezier(.22,.61,.36,1)}
+.bn-slide{flex:0 0 100%;position:relative;overflow:hidden}
+.bn-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.bn-cap{
+  position:absolute;left:0;right:0;bottom:0;padding:36px 26px 20px;color:#fff;
+  background:linear-gradient(to top,rgba(6,12,24,.74),rgba(6,12,24,.22) 54%,transparent);
+}
+.bn-cap b{display:block;font-size:18px;font-weight:650;letter-spacing:-.01em;margin-bottom:4px}
+.bn-cap span{display:block;font-size:12px;opacity:.9;line-height:1.5}
+.bn-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,.92);color:#1d1d1f;font-size:15px;line-height:1;
+  display:flex;align-items:center;justify-content:center;z-index:2;
+  box-shadow:0 4px 14px -6px rgba(0,0,0,.5);opacity:0;transition:opacity .25s,transform .2s;
+}
+.banner:hover .bn-arrow{opacity:1}
+.bn-arrow:hover{transform:translateY(-50%) scale(1.06)}
+.bn-prev{left:12px}
+.bn-next{right:12px}
+.bn-dots{position:absolute;right:18px;bottom:16px;display:flex;gap:6px;z-index:2}
+.bn-dots button{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.55);transition:width .22s,background .22s}
+.bn-dots button.is-on{background:#fff;width:16px;border-radius:3px}
+
+.npanel{display:flex;flex-direction:column;min-height:0;overflow:hidden;
+  border:1px solid #e5e5ea;border-radius:var(--radius);background:var(--surface)}
+.np-head{flex:none;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px 11px;border-bottom:1px solid #e5e5ea}
+.np-head b{font-size:13px;font-weight:650}
+.np-head span{font-size:10.5px;color:var(--muted)}
+.np-list{flex:1;min-height:0;overflow-y:auto;padding:2px 0;scrollbar-width:thin}
+.np-item{display:flex;flex-direction:column;gap:3px;width:100%;text-align:left;
+  padding:9px 16px;transition:background .18s}
+.np-item:hover{background:var(--surface-2)}
+.np-item time{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
+.np-item b{font-size:12px;font-weight:550;line-height:1.45;color:var(--ink-soft);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.np-item.is-brief b::before{content:"简报 · ";color:var(--muted);font-weight:400}
+.np-all{flex:none;padding:11px;font-size:11.5px;color:var(--accent);font-weight:600;
+  border-top:1px solid #e5e5ea;text-align:center;transition:background .18s}
+.np-all:hover{background:var(--surface-2)}
+
+/* ------------------------------------------------ 分区 */
+.count-chip{font-size:12px;color:var(--muted);white-space:nowrap}
+.portal-sec{padding:0;margin-bottom:44px;scroll-margin-top:80px}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;padding-bottom:11px;border-bottom:1px solid #e5e5ea}
+.sec-no{font-size:12px;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
+.sec-head h2{font-size:18px;margin:0;font-weight:650;letter-spacing:-.01em}
+.sec-count{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap}
+
+.board-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:18px}
+.board-card{
+  display:flex;flex-direction:column;border:1px solid #e5e5ea;
+  border-radius:var(--radius);background:var(--surface);overflow:hidden;
+  box-shadow:var(--shadow);transition:transform .3s cubic-bezier(.22,.61,.36,1),box-shadow .3s;
+}
+.board-card:hover{transform:translateY(-10px);box-shadow:var(--shadow-lift)}
+.board-thumb{aspect-ratio:16/9;background:var(--surface-2);position:relative;overflow:hidden}
+.board-thumb img{width:100%;height:100%;object-fit:cover;object-position:top center}
+.board-thumb .skeleton{border-radius:0;border:0;margin:0;height:100%}
+.board-meta{padding:15px 17px 17px;display:flex;flex-direction:column;gap:6px;flex:1}
+.board-meta h3{margin:0;font-size:14.5px;font-weight:650}
+.board-meta p{margin:6px 0 0;font-size:12.5px;color:var(--muted);line-height:1.6;flex:1}
+.board-foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+.group-tag{font-size:10.5px;color:var(--accent);background:var(--accent-soft);padding:3px 9px;border-radius:3px}
+.open-link{font-size:12px;color:var(--accent);font-weight:600}
+.board-thumb.is-big{display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,#f2f6fd,#e2eafa 55%,#eef4fd);}
+.big-txt{font-size:clamp(21px,2.2vw,29px);font-weight:700;color:var(--accent);
+  letter-spacing:.02em;text-align:center;padding:0 16px;line-height:1.28;position:relative;z-index:1}
+.board-thumb.is-big::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 72% 18%,rgba(59,130,246,.14),transparent 62%)}
+.board-card.is-off{cursor:default}
+.board-card.is-off:hover{transform:none;box-shadow:var(--shadow)}
+.open-link.muted{color:var(--muted)}
+.group-tag.tg-off{color:var(--muted);background:var(--surface-2)}
+
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px}
+.tool-card{display:flex;align-items:center;gap:11px;padding:14px 16px;border:1px solid #e5e5ea;
+  border-radius:var(--radius-sm);background:var(--surface);transition:.25s cubic-bezier(.22,.61,.36,1)}
+.tool-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:var(--shadow-lift)}
+.tool-card.round{opacity:.75}
+.tool-card.round:hover{transform:none;border-color:#e5e5ea;box-shadow:none;opacity:.75}
+.tc-ic{font-size:17px;flex:none}
+.tc-txt{min-width:0}
+.tc-txt b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc-txt span{display:-webkit-box;font-size:11px;color:var(--muted);line-height:1.35;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+.notice-line{
+  margin-top:34px;padding:16px 20px;border:1px dashed #e5e5ea;
+  border-radius:var(--radius-sm);font-size:12.5px;color:var(--muted);line-height:1.8;
+}
+.back-link{font-size:12.5px;color:var(--accent)}
+
+/* ------------------------------------------------ 公告弹窗 */
+.modal-panel-md{width:min(560px,100%)}
+.nt-head{padding:26px 28px 0}
+.nt-head h2{font-size:20px;margin:0 0 6px;font-weight:650}
+.nt-head .nt-meta{font-size:11.5px;color:var(--muted)}
+.nt-body{padding:16px 28px 28px;font-size:13px;line-height:1.9;color:var(--ink-soft)}
+.nt-body p{margin:0 0 10px}
+.nt-list{padding:8px 0 4px;max-height:60vh;overflow:auto}
+.nt-row{display:flex;gap:12px;align-items:baseline;width:100%;text-align:left;
+  padding:12px 28px;border-bottom:1px solid #e5e5ea;transition:background .2s}
+.nt-row:hover{background:var(--surface-2)}
+.nt-row time{font-size:11.5px;color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
+.nt-row b{font-size:13px;font-weight:600;line-height:1.5}
+.nt-row .nt-cat{font-size:10.5px;color:var(--accent);background:var(--accent-soft);padding:2px 8px;border-radius:3px;flex:none}
+
+/* ------------------------------------------------ 响应式 */
+@media (max-width:1240px){
+  .pm-top{grid-template-columns:minmax(0,1fr) 280px}
+}
+@media (max-width:1080px){
+  .pm-top{grid-template-columns:1fr}
+  .banner{aspect-ratio:16/6.4}
+  .np-list{max-height:200px}
+}
+@media (max-width:1000px){
+  .portal{flex-direction:column;padding:0 18px}
+  .pside{position:static;width:100%;height:auto;flex:none;border-right:0;
+    border-bottom:1px solid #e5e5ea;padding:16px 0 10px}
+  .ps-brand{padding-bottom:12px}
+  .ps-search{margin-bottom:10px}
+  .ps-nav{display:flex;gap:6px;overflow-x:auto;flex:none;padding-bottom:2px;scrollbar-width:none}
+  .ps-nav::-webkit-scrollbar{display:none}
+  .nv{white-space:nowrap;flex:none;padding:7px 12px;font-size:12px}
+  .nv-n{display:none}
+  .ps-foot{display:none}
+  .pmain{padding:18px 0 40px}
+}
+@media (max-width:640px){
+  .banner{aspect-ratio:16/9;min-height:0}
+  .bn-cap{padding:26px 18px 16px}
+  .bn-cap b{font-size:15px}
+  .bn-cap span{font-size:11px}
+  .pm-head h1{font-size:21px}
+  .portal-sec{margin-bottom:34px}
+}
+</style>
+</head>
+
+<div id="progressTrack"><div id="progressBar"></div></div>
+
+<header id="siteHeader">
+  <div class="wrap head-inner head-wide">
+    <a class="brand" href="home.html" data-logo></a>
+    <nav class="head-nav">
+      <a class="nav-link" href="home.html">公司首页</a>
+    </nav>
+    <div class="head-actions">
+      <span class="badge-host">
+        <span class="btn btn-ghost">员工通道 <span data-badge>32</span></span>
+      </span>
+    </div>
+  </div>
+</header>
+
+<div class="portal">
+  <aside class="pside">
+    <div class="ps-brand">
+      <span class="ps-logo">DGG</span>
+      <div class="ps-brand-txt"><b>员工通道</b><em>EMPLOYEE PORTAL</em></div>
+    </div>
+    <label class="ps-search">
+      <span class="ps-ic" aria-hidden="true">⌕</span>
+      <input id="boardSearch" type="search" placeholder="搜索看板、系统或工具" autocomplete="off">
+    </label>
+    <nav class="ps-nav" id="sideNav" aria-label="分区导航"></nav>
+    <div class="ps-foot" id="staffStats"></div>
+  </aside>
+
+  <main class="pmain">
+    <div class="pm-head">
+      <div>
+        <span class="pm-kicker">Employee Portal</span>
+        <h1>数据工作台</h1>
+      </div>
+      <div class="pm-meta" id="boardCount"></div>
+    </div>
+
+    <div class="pm-top">
+      <div class="banner" id="banner">
+        <div class="bn-track" id="bnTrack"></div>
+        <button type="button" class="bn-arrow bn-prev" id="bnPrev" aria-label="上一张">‹</button>
+        <button type="button" class="bn-arrow bn-next" id="bnNext" aria-label="下一张">›</button>
+        <div class="bn-dots" id="bnDots"></div>
+      </div>
+      <aside class="npanel">
+        <div class="np-head"><b>公告</b><span id="npCount"></span></div>
+        <div class="np-list" id="npList"></div>
+        <button type="button" class="np-all" id="npAll">查看全部公告 →</button>
+      </aside>
+    </div>
+
+    <div id="portalSections"></div>
+
+    <div class="notice-line">
+      <b>说明</b>：本页整合了原「看板导航页」的六大分区与全部入口。带封面的卡片点开即进入对应在线看板；
+      未提供截图的集团系统、企业微信表格与文档使用大字标识占位，需登录后访问原系统。
+    </div>
+
+    <div style="margin-top:20px"><a class="back-link" href="home.html">← 返回公司首页</a></div>
+  </main>
+</div>
+
+<!-- 公告弹窗：单条详情 / 全部列表 -->
+<div class="modal" id="noticeModal" aria-hidden="true">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-panel modal-panel-md" role="dialog" aria-modal="true" aria-labelledby="ntTitle">
+    <button class="modal-close" data-modal-close aria-label="关闭">×</button>
+    <div id="noticeModalBody"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="staff.js"></script>
+</body>
+</html>

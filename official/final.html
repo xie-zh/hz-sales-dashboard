@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>顶呱呱杭州分公司 · 企业服务</title>
+<link rel="stylesheet" href="base.css">
+<script>window.FORCE_THEME="a";</script>
+<script src="site.config.js"></script>
+</head>
+<body>
+
+<!-- #089 预加载画面 -->
+<div id="preloader">
+  <div class="preload-logo">Loading</div>
+  <div id="preloadNum">0%</div>
+  <div id="preloadTrack"><div id="preloadBar"></div></div>
+</div>
+
+<!-- #079 滚动进度条 -->
+<div id="progressTrack"><div id="progressBar"></div></div>
+
+<!-- #056 轻提示 -->
+<div id="toastHost"></div>
+
+<!-- #092 页面转场幕布 -->
+<div id="transitionCurtain"></div>
+
+<!-- #075 吸顶页头 + #067 巨型菜单 -->
+<header id="siteHeader">
+  <div id="announcement"></div>
+  <div class="wrap head-inner">
+    <button class="nav-burger" id="navBurger" aria-label="打开导航菜单" aria-expanded="false" aria-controls="navDrawer">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="final.html" data-logo></a>
+    <nav class="head-nav" id="navLinks"></nav>
+    <div class="head-actions">
+      <span class="badge-host">
+        <button class="btn btn-primary magnetic" data-staff>员工通道 <span data-badge>10</span></button>
+      </span>
+      <button class="btn btn-ghost" data-login>登录</button>
+    </div>
+  </div>
+  <div id="megaPanel"><div id="megaInner"></div></div>
+</header>
+
+<main>
+  <!-- Hero · #073 视差 -->
+  <section class="hero" id="top">
+    <div class="hero-inner">
+      <span class="hero-eyebrow" data-hero-eyebrow></span>
+      <h1 class="hero-title" data-hero-title></h1>
+      <p class="hero-sub" data-hero-sub></p>
+      <div class="hero-actions">
+        <a class="btn btn-primary magnetic" href="#about" data-hero-primary></a>
+        <a class="btn btn-ghost" href="#about" data-hero-secondary></a>
+      </div>
+      <div class="hero-visual" id="heroVisual" data-parallax="0.15"></div>
+    </div>
+  </section>
+
+  <!-- 数据指标条 -->
+  <section class="metrics">
+    <div class="wrap"><div id="metricsRow"></div></div>
+  </section>
+
+  <!-- 解决方案矩阵 · #081 #153 #154 -->
+  <section id="culture">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="section-kicker">Our Culture</span>
+        <h2 class="section-title">企业文化</h2>
+        <p class="section-desc">使命、愿景、四条价值观与六项服务优势——不是墙上的标语，是杭州分公司每天在用的做事方式。</p>
+      </div>
+      <div class="cul-wrap" id="cultureList"></div>
+    </div>
+  </section>
+
+  <!-- 公司人员介绍 · 按事业部归类 + 业务中心置末 -->
+  <section id="team">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="section-kicker">Our Team</span>
+        <h2 class="section-title">公司人员介绍</h2>
+        <p class="section-desc">七位负责人均为从业十余年的行业老手，合计带队 40 余位专业顾问。</p>
+      </div>
+      <div class="team-layout">
+        <div class="team-list" id="teamList" role="tablist" aria-label="负责人列表"></div>
+        <div class="team-profile" id="teamProfile"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="news" class="section-alt">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="section-kicker">Insights</span>
+        <h2 class="section-title">新闻洞察</h2>
+      </div>
+      <div id="newsList"></div>
+    </div>
+  </section>
+
+
+  <!-- 关于我们 + #150 滚动监听 -->
+  <section id="about">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="section-kicker">About &amp; Services</span>
+        <h2 class="section-title" data-about-title>关于我们</h2>
+        <p class="section-desc" data-about-body></p>
+      </div>
+      <div class="svc-merge">
+        <aside class="svc-list" id="svcList" aria-label="业务服务列表"></aside>
+        <div class="svc-stage" id="svcStage"></div>
+      </div>
+      <div class="about-loc reveal">
+        <div class="al-txt">
+          <b data-about-note>顶呱呱杭州分公司</b>
+          <span data-about-address></span>
+        </div>
+        <button type="button" class="btn btn-primary" data-contact>联系我们</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- #145 滚动时间轴 -->
+  <section id="timeline" class="section-alt">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="section-kicker">Milestones</span>
+        <h2 class="section-title">发展历程</h2>
+        <p class="section-desc">扎根杭州，服务华东；每一步都围绕「让老板经营企业更简单」。</p>
+      </div>
+      <div class="tl-layout">
+        <div class="tl-wrap"><div id="timelineLine"></div><ul id="timelineList"></ul></div>
+        <aside class="tl-aside reveal" id="timelineAside"></aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- #147 堆叠卡片 -->
+
+  <!-- #058 客户案例轮播 -->
+  <section id="cases" class="section-alt">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="section-kicker">Our Space</span>
+        <h2 class="section-title">公司影像</h2>
+      </div>
+      <div class="carousel"><div id="casesTrack"></div></div>
+      <div class="case-ctrl">
+        <button id="casePrev" aria-label="上一张">‹</button>
+        <button id="caseNext" aria-label="下一张">›</button>
+        <div id="casesDots"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 新闻洞察 -->
+
+  <!-- CTA -->
+
+  <section id="cta">
+    <div class="wrap">
+      <div class="cta-band reveal">
+        <h2 data-cta-title></h2>
+        <p data-cta-desc></p>
+        <a class="btn btn-primary magnetic" href="#top" data-cta-btn></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 小青蛙咨询浮窗：序列帧动画 + 5s 循环气泡，点青蛙弹微信二维码（data-contact） -->
+<button id="frogWidget" type="button" data-contact aria-label="点小青蛙咨询：微信二维码">
+  <span class="frog-bubble" aria-hidden="true">点我咨询</span>
+  <span class="frog-shadow" aria-hidden="true"></span>
+  <span class="frog-stage" aria-hidden="true"></span>
+</button>
+
+<!-- 手机端左侧抽屉导航 -->
+<div class="nav-drawer" id="navDrawer" aria-hidden="true">
+  <div class="nd-head">
+    <span class="nd-title">快速导航</span>
+    <button class="nd-close" data-nav-close aria-label="关闭导航">×</button>
+  </div>
+  <nav class="nd-nav" id="ndNav"></nav>
+  <div class="nd-foot">
+    <a class="btn btn-primary" href="final-staff.html" target="_blank" rel="noopener">员工通道</a>
+    <button class="btn btn-ghost" data-login>登录</button>
+  </div>
+</div>
+<div class="nav-scrim" id="navScrim" data-nav-close></div>
+
+<!-- 登录 / 注册 / 找回密码 -->
+<div class="modal" id="loginModal" aria-hidden="true">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-panel modal-panel-sm lg-panel" role="dialog" aria-modal="true" aria-labelledby="lgTitle">
+    <button class="modal-close" data-modal-close aria-label="关闭">×</button>
+    <div id="loginModalBody"></div>
+  </div>
+</div>
+
+<!-- 联系我们：微信二维码弹窗 -->
+<div class="modal" id="contactModal" aria-hidden="true">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-panel modal-panel-sm" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+    <button class="modal-close" data-modal-close aria-label="关闭">×</button>
+    <div id="contactModalBody"></div>
+  </div>
+</div>
+
+<!-- 事业部成员弹窗 -->
+<div class="modal" id="teamModal" aria-hidden="true">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-panel modal-panel-team" role="dialog" aria-modal="true" aria-labelledby="tmTitle">
+    <button class="modal-close" data-modal-close aria-label="关闭">×</button>
+    <div id="teamModalBody"></div>
+  </div>
+</div>
+
+<!-- 解决方案详情弹窗：介绍 + 微信二维码咨询位 -->
+<div class="modal" id="solutionModal" aria-hidden="true">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal-close" data-modal-close aria-label="关闭">×</button>
+    <div id="solutionModalBody"></div>
+  </div>
+</div>
+
+
+<footer>
+  <div class="wrap foot-inner">
+    <div><div><span data-footer-note></span></div><div data-footer-address style="margin-top:5px"></div><div data-footer-address-sub style="margin-top:3px;opacity:.7"></div></div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
